@@ -1,23 +1,24 @@
 [project]
 name = "beacons-mcp"
 version = "0.1.0"
-description = "Add your description here"
+description = "MCP server exposing the 3D-Beacons protein structure API to AI agents."
 readme = "README.md"
+license = "MIT"
 authors = [
     { name = "Mihaly Varadi", email = "24314338+mvaradi@users.noreply.github.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["mcp>=2.3,<3"]
 
 [project.scripts]
-beacons-mcp = "beacons_mcp:main"
+beacons-mcp = "beacons_mcp.server:main"
 
 [build-system]
 requires = ["uv_build>=0.13.7,<0.14.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
-dev = [
-    "pytest>=9.2.0",
-    "ruff>=0.17.4",
-]
+dev = ["mcp[cli]>=2.3,<3", "pytest"]
+
+[tool.pytest.ini_options] 
+testpaths = ["tests"]
