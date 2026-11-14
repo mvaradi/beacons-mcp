@@ -1,0 +1,483 @@
+{
+ "uniprot_entry": {
+  "ac": "P69905",
+  "id": "HBA_HUMAN",
+  "uniprot_checksum": "15E13666573BBBAE",
+  "sequence_length": 142,
+  "segment_start": 2,
+  "segment_end": 142
+ },
+ "structures": [
+  {
+   "summary": {
+    "model_identifier": "2w72",
+    "model_category": "EXPERIMENTALLY DETERMINED",
+    "model_url": "https://www.ebi.ac.uk/pdbe/static/entry/2w72_updated.cif",
+    "model_format": "MMCIF",
+    "model_page_url": "https://www.ebi.ac.uk/pdbe/entry/pdb/2w72",
+    "provider": "PDBe",
+    "created": "2008-12-19",
+    "sequence_identity": 98.0,
+    "uniprot_start": 2,
+    "uniprot_end": 142,
+    "coverage": 0.993,
+    "experimental_method": "X-RAY DIFFRACTION",
+    "resolution": 1.07,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P68871",
+      "identifier_category": "UNIPROT",
+      "description": "HUMAN HEMOGLOBIN A",
+      "chain_ids": [
+       "B",
+       "D"
+      ]
+     },
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P69905",
+      "identifier_category": "UNIPROT",
+      "description": "HUMAN HEMOGLOBIN A",
+      "chain_ids": [
+       "C",
+       "A"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "identifier": "XE",
+      "identifier_category": "CCD",
+      "description": "XENON",
+      "chain_ids": [
+       "D",
+       "B",
+       "C",
+       "A"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "2w72",
+    "model_category": "EXPERIMENTALLY DETERMINED",
+    "model_url": "https://www.ebi.ac.uk/pdbe/static/entry/2w72_updated.cif",
+    "model_format": "MMCIF",
+    "model_page_url": "https://www.ebi.ac.uk/pdbe/entry/pdb/2w72",
+    "provider": "PDBe",
+    "created": "2008-12-19",
+    "sequence_identity": 99.0,
+    "uniprot_start": 2,
+    "uniprot_end": 142,
+    "coverage": 0.993,
+    "experimental_method": "X-RAY DIFFRACTION",
+    "resolution": 1.07,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P68871",
+      "identifier_category": "UNIPROT",
+      "description": "HUMAN HEMOGLOBIN A",
+      "chain_ids": [
+       "B",
+       "D"
+      ]
+     },
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P69905",
+      "identifier_category": "UNIPROT",
+      "description": "HUMAN HEMOGLOBIN A",
+      "chain_ids": [
+       "C",
+       "A"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "identifier": "XE",
+      "identifier_category": "CCD",
+      "description": "XENON",
+      "chain_ids": [
+       "D",
+       "B",
+       "C",
+       "A"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "P69905_2-142:9vic.3.A",
+    "model_category": "TEMPLATE-BASED",
+    "model_url": "https://swissmodel.expasy.org/3d-beacons/uniprot/P69905.cif?range=2-142&template=9vic.3.A&provider=swissmodel",
+    "model_format": "MMCIF",
+    "model_type": "ATOMIC",
+    "model_page_url": "https://swissmodel.expasy.org/repository/uniprot/P69905?range=2-142&template=9vic.3.A",
+    "provider": "SWISS-MODEL",
+    "created": "2026-11-14",
+    "sequence_identity": 1.0,
+    "uniprot_start": 2,
+    "uniprot_end": 142,
+    "coverage": 0.993,
+    "confidence_type": "QMEANDisCo",
+    "confidence_version": "4.6.0",
+    "confidence_avg_local_score": 0.836,
+    "oligomeric_state": "MONOMER",
+    "entities": [
+     {
+      "entity_type": "NON-POLYMER",
+      "identifier": "HEM",
+      "identifier_category": "CCD",
+      "description": "PROTOPORPHYRIN IX CONTAINING FE",
+      "chain_ids": [
+       "_"
+      ]
+     },
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P69905",
+      "identifier_category": "UNIPROT",
+      "description": "model based on template 9vic.3.A: Hemoglobin subunit alpha",
+      "chain_ids": [
+       "A"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "AF-0000000211046780",
+    "model_category": "AB-INITIO",
+    "model_url": "https://alphafold.ebi.ac.uk/files/AF-0000000211046780-model_v1.cif",
+    "model_format": "MMCIF",
+    "model_type": null,
+    "model_page_url": "https://alphafold.ebi.ac.uk/entry/AF-0000000211046780",
+    "provider": "AlphaFold DB",
+    "number_of_conformers": null,
+    "ensemble_sample_url": null,
+    "ensemble_sample_format": null,
+    "created": "2026-02-20T08:22:17Z",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 142,
+    "coverage": 1.0,
+    "experimental_method": null,
+    "resolution": null,
+    "confidence_type": "pLDDT",
+    "confidence_version": null,
+    "confidence_avg_local_score": 94.52,
+    "oligomeric_state": "HETERODIMER",
+    "preferred_assembly_id": null,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P69905",
+      "identifier_category": "UNIPROT",
+      "description": "Hemoglobin subunit alpha",
+      "chain_ids": [
+       "A"
+      ]
+     },
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P68873",
+      "identifier_category": "UNIPROT",
+      "description": "Hemoglobin subunit beta",
+      "chain_ids": [
+       "B"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "AF-0000000203852816",
+    "model_category": "AB-INITIO",
+    "model_url": "https://alphafold.ebi.ac.uk/files/AF-0000000203852816-model_v1.cif",
+    "model_format": "MMCIF",
+    "model_type": null,
+    "model_page_url": "https://alphafold.ebi.ac.uk/entry/AF-0000000203852816",
+    "provider": "AlphaFold DB",
+    "number_of_conformers": null,
+    "ensemble_sample_url": null,
+    "ensemble_sample_format": null,
+    "created": "2026-02-20T08:22:17Z",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 142,
+    "coverage": 1.0,
+    "experimental_method": null,
+    "resolution": null,
+    "confidence_type": "pLDDT",
+    "confidence_version": null,
+    "confidence_avg_local_score": 88.14,
+    "oligomeric_state": "HETERODIMER",
+    "preferred_assembly_id": null,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P69905",
+      "identifier_category": "UNIPROT",
+      "description": "Hemoglobin subunit alpha",
+      "chain_ids": [
+       "A"
+      ]
+     },
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P69892",
+      "identifier_category": "UNIPROT",
+      "description": "Hemoglobin subunit gamma-2",
+      "chain_ids": [
+       "B"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "6677",
+    "model_category": "EXPERIMENTALLY DETERMINED",
+    "model_url": "https://www.sasbdb.org/media/pdb_file/SASDNS2_fit1_model1.pdb",
+    "model_format": "PDB",
+    "model_type": "DUMMY",
+    "model_page_url": "https://www.sasbdb.org/data/SASDNS2",
+    "provider": "SASBDB",
+    "created": "2022-01-04",
+    "sequence_identity": 1.0,
+    "uniprot_start": 3,
+    "uniprot_end": 142,
+    "coverage": 1.0,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "description": "Hemoglobin subunit alpha",
+      "chain_ids": []
+     },
+     {
+      "entity_type": "POLYMER",
+      "description": "Hemoglobin subunit beta",
+      "chain_ids": []
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "6679",
+    "model_category": "EXPERIMENTALLY DETERMINED",
+    "model_url": "https://www.sasbdb.org/media/pdb_file/SASDNS2_fit2_model1.PDB",
+    "model_format": "PDB",
+    "model_type": "ATOMIC",
+    "model_page_url": "https://www.sasbdb.org/data/SASDNS2",
+    "provider": "SASBDB",
+    "created": "2022-01-04",
+    "sequence_identity": 1.0,
+    "uniprot_start": 3,
+    "uniprot_end": 142,
+    "coverage": 1.0,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "description": "Hemoglobin subunit alpha",
+      "chain_ids": []
+     },
+     {
+      "entity_type": "POLYMER",
+      "description": "Hemoglobin subunit beta",
+      "chain_ids": []
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "P69905",
+    "model_category": "TEMPLATE-BASED",
+    "model_url": "https://alphafill.eu/v1/aff/P69905",
+    "model_format": "MMCIF",
+    "model_page_url": "https://alphafill.eu/model?id=P69905",
+    "provider": "AlphaFill",
+    "created": "2023-12-22",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 142,
+    "coverage": 1.0,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "description": "Hemoglobin subunit alpha",
+      "chain_ids": [
+       "A"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "description": "PROTOPORPHYRIN IX CONTAINING FE",
+      "chain_ids": [
+       "B",
+       "C",
+       "U",
+       "V"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "description": "CARBON MONOXIDE",
+      "chain_ids": [
+       "D",
+       "W"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "CHS.18651.2",
+    "model_category": "AB-INITIO",
+    "model_url": "https://data.isoform.io/pdb/CHS.18651.2.pdb",
+    "model_format": "PDB",
+    "provider": "isoform.io",
+    "created": "2022-06-05",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 142,
+    "coverage": 1.0,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "description": "Hemoglobin subunit alpha",
+      "chain_ids": [
+       "A"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "CHS.18652.1",
+    "model_category": "AB-INITIO",
+    "model_url": "https://data.isoform.io/pdb/CHS.18652.1.pdb",
+    "model_format": "PDB",
+    "provider": "isoform.io",
+    "created": "2022-06-05",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 142,
+    "coverage": 1.0,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "description": "Hemoglobin subunit alpha",
+      "chain_ids": [
+       "A"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "P69905_V1_3",
+    "model_category": "AB-INITIO",
+    "model_url": "https://levy.mocel.unige.ch/hom_atlas/P69905_V1_3.pdb",
+    "model_format": "PDB",
+    "model_type": "ATOMIC",
+    "provider": "levylab",
+    "created": "2023-09-14",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 142,
+    "coverage": 1.0,
+    "confidence_type": "pLDDT",
+    "confidence_version": "AlphaFold2",
+    "confidence_avg_local_score": 97.4203,
+    "oligomeric_state": "HOMODIMER",
+    "oligomeric_state_confidence": 0.8861,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P69905",
+      "identifier_category": "UNIPROT",
+      "description": "Hemoglobin subunit alpha",
+      "chain_ids": [
+       "A",
+       "B"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "P69905_DOMAIN1-no_hotspot_l90_s553912_mpnn16_model1",
+    "model_category": "AB-INITIO",
+    "model_url": "https://bindome.epfl.ch/static/3d/cf/cif/P69905_DOMAIN1-no_hotspot_l90_s553912_mpnn16_model1.cif",
+    "model_format": "MMCIF",
+    "model_page_url": "http://bindome.epfl.ch/model/P69905_DOMAIN1-no_hotspot_l90_s553912_mpnn16_model1",
+    "provider": "Bindome",
+    "created": "NA",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 142,
+    "coverage": 1.0,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "description": "",
+      "chain_ids": [
+       "Apoly",
+       "Bpoly"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "P69905_DOMAIN1-no_hotspot_l90_s632526_mpnn1_model1",
+    "model_category": "AB-INITIO",
+    "model_url": "https://bindome.epfl.ch/static/a3/ee/cif/P69905_DOMAIN1-no_hotspot_l90_s632526_mpnn1_model1.cif",
+    "model_format": "MMCIF",
+    "model_page_url": "http://bindome.epfl.ch/model/P69905_DOMAIN1-no_hotspot_l90_s632526_mpnn1_model1",
+    "provider": "Bindome",
+    "created": "NA",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 142,
+    "coverage": 1.0,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "description": "",
+      "chain_ids": [
+       "Apoly",
+       "Bpoly"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,147 @@
+{
+ "info": {
+  "title": "3D Beacons HUB API",
+  "description": "The 3D-Beacons Network provides unified programmatic access to experimentally determined and predicted structure models.",
+  "contact": {
+   "name": "3D-Beacons Network",
+   "url": "https://3dbeacons.org/",
+   "email": "pdbekb_help@ebi.ac.uk"
+  },
+  "license": {
+   "name": "CC BY 4.0",
+   "url": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "version": "2.7.1"
+ },
+ "servers": [
+  {
+   "url": "/pdbe/pdbe-kb/3dbeacons/api/v2"
+  }
+ ],
+ "summary_parameters": [
+  {
+   "name": "qualifier",
+   "in": "path",
+   "required": true,
+   "schema": {
+    "description": "UniProtKB accession number (AC), entry name (ID) or CRC64 checksum of the UniProt sequence",
+    "title": "Qualifier"
+   },
+   "description": "UniProtKB accession number (AC), entry name (ID) or CRC64 checksum of the UniProt sequence",
+   "examples": {
+    "default": {
+     "summary": "Example qualifier",
+     "value": "P38398"
+    }
+   }
+  },
+  {
+   "name": "provider",
+   "in": "query",
+   "required": false,
+   "schema": {
+    "anyOf": [
+     {},
+     {
+      "type": "null"
+     }
+    ],
+    "enum": [
+     "pdbe",
+     "ped",
+     "swissmodel",
+     "alphafold",
+     "sasbdb",
+     "alphafill",
+     "hegelab",
+     "modelarchive",
+     "isoformio",
+     "levylab",
+     "bindome"
+    ],
+    "title": "Provider"
+   }
+  },
+  {
+   "name": "template",
+   "in": "query",
+   "required": false,
+   "schema": {
+    "anyOf": [
+     {},
+     {
+      "type": "null"
+     }
+    ],
+    "description": "Template is 4 letter PDB code, or 4 letter code with assembly ID and chain for SMTL entries",
+    "title": "Template"
+   },
+   "description": "Template is 4 letter PDB code, or 4 letter code with assembly ID and chain for SMTL entries"
+  },
+  {
+   "name": "range",
+   "in": "query",
+   "required": false,
+   "schema": {
+    "anyOf": [
+     {},
+     {
+      "type": "null"
+     }
+    ],
+    "description": "Specify a UniProt sequence residue range",
+    "title": "Range"
+   },
+   "description": "Specify a UniProt sequence residue range"
+  },
+  {
+   "name": "exclude_provider",
+   "in": "query",
+   "required": false,
+   "schema": {
+    "anyOf": [
+     {
+      "type": "string"
+     },
+     {
+      "type": "null"
+     }
+    ],
+    "description": "Provider to exclude.",
+    "enum": [
+     "pdbe",
+     "ped",
+     "swissmodel",
+     "alphafold",
+     "sasbdb",
+     "alphafill",
+     "hegelab",
+     "modelarchive",
+     "isoformio",
+     "levylab",
+     "bindome"
+    ],
+    "title": "Exclude Provider"
+   },
+   "description": "Provider to exclude."
+  },
+  {
+   "name": "uniprot_checksum",
+   "in": "query",
+   "required": false,
+   "schema": {
+    "anyOf": [
+     {
+      "type": "string"
+     },
+     {
+      "type": "null"
+     }
+    ],
+    "description": "CRC64 checksum of the UniProt sequence",
+    "title": "Uniprot Checksum"
+   },
+   "description": "CRC64 checksum of the UniProt sequence"
+  }
+ ]
+}

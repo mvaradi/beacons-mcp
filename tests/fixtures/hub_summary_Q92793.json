@@ -1,0 +1,595 @@
+{
+ "uniprot_entry": {
+  "ac": "Q92793",
+  "id": "CBP_HUMAN",
+  "uniprot_checksum": "3BEA9B8558BA1A5E",
+  "sequence_length": 2442,
+  "segment_start": 344,
+  "segment_end": 1701
+ },
+ "structures": [
+  {
+   "summary": {
+    "model_identifier": "5j0d",
+    "model_category": "EXPERIMENTALLY DETERMINED",
+    "model_url": "https://www.ebi.ac.uk/pdbe/static/entry/5j0d_updated.cif",
+    "model_format": "MMCIF",
+    "model_page_url": "https://www.ebi.ac.uk/pdbe/entry/pdb/5j0d",
+    "provider": "PDBe",
+    "created": "2016-03-28",
+    "sequence_identity": 100.0,
+    "uniprot_start": 1081,
+    "uniprot_end": 1197,
+    "coverage": 0.048,
+    "experimental_method": "X-RAY DIFFRACTION",
+    "resolution": 1.05,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q92793",
+      "identifier_category": "UNIPROT",
+      "description": "CREB-binding protein",
+      "chain_ids": [
+       "A"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "identifier": "EDO",
+      "identifier_category": "CCD",
+      "description": "1,2-ETHANEDIOL",
+      "chain_ids": [
+       "A"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "identifier": "6F9",
+      "identifier_category": "CCD",
+      "description": "7-(3,5-dimethoxyphenyl)-N-[(3S)-1-methylpiperidin-3-yl]-4-propanoyl-2,3,4,5-tetrahydro-1,4-benzoxazepine-9-carboxamide",
+      "chain_ids": [
+       "A"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "5i86",
+    "model_category": "EXPERIMENTALLY DETERMINED",
+    "model_url": "https://www.ebi.ac.uk/pdbe/static/entry/5i86_updated.cif",
+    "model_format": "MMCIF",
+    "model_page_url": "https://www.ebi.ac.uk/pdbe/entry/pdb/5i86",
+    "provider": "PDBe",
+    "created": "2016-02-18",
+    "sequence_identity": 100.0,
+    "uniprot_start": 1082,
+    "uniprot_end": 1197,
+    "coverage": 0.048,
+    "experimental_method": "X-RAY DIFFRACTION",
+    "resolution": 1.05,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q92793",
+      "identifier_category": "UNIPROT",
+      "description": "CREB-binding protein",
+      "chain_ids": [
+       "A",
+       "B"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "identifier": "EDO",
+      "identifier_category": "CCD",
+      "description": "1,2-ETHANEDIOL",
+      "chain_ids": [
+       "A",
+       "B"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "identifier": "SCN",
+      "identifier_category": "CCD",
+      "description": "THIOCYANATE ION",
+      "chain_ids": [
+       "A"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "9h0k",
+    "model_category": "EXPERIMENTALLY DETERMINED",
+    "model_url": "https://www.ebi.ac.uk/pdbe/static/entry/9h0k_updated.cif",
+    "model_format": "MMCIF",
+    "model_page_url": "https://www.ebi.ac.uk/pdbe/entry/pdb/9h0k",
+    "provider": "PDBe",
+    "created": "2024-10-08",
+    "sequence_identity": 83.0,
+    "uniprot_start": 1322,
+    "uniprot_end": 1555,
+    "coverage": 0.13,
+    "experimental_method": "X-RAY DIFFRACTION",
+    "resolution": 1.75,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q92793",
+      "identifier_category": "UNIPROT",
+      "description": "CREB-binding protein",
+      "chain_ids": [
+       "A",
+       "B"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "identifier": "SO4",
+      "identifier_category": "CCD",
+      "description": "SULFATE ION",
+      "chain_ids": [
+       "B"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "identifier": "1VU",
+      "identifier_category": "CCD",
+      "description": "propionyl Coenzyme A",
+      "chain_ids": [
+       "A",
+       "B"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "9h0k",
+    "model_category": "EXPERIMENTALLY DETERMINED",
+    "model_url": "https://www.ebi.ac.uk/pdbe/static/entry/9h0k_updated.cif",
+    "model_format": "MMCIF",
+    "model_page_url": "https://www.ebi.ac.uk/pdbe/entry/pdb/9h0k",
+    "provider": "PDBe",
+    "created": "2024-10-08",
+    "sequence_identity": 83.0,
+    "uniprot_start": 1618,
+    "uniprot_end": 1700,
+    "coverage": 0.13,
+    "experimental_method": "X-RAY DIFFRACTION",
+    "resolution": 1.75,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q92793",
+      "identifier_category": "UNIPROT",
+      "description": "CREB-binding protein",
+      "chain_ids": [
+       "A",
+       "B"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "identifier": "SO4",
+      "identifier_category": "CCD",
+      "description": "SULFATE ION",
+      "chain_ids": [
+       "B"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "identifier": "1VU",
+      "identifier_category": "CCD",
+      "description": "propionyl Coenzyme A",
+      "chain_ids": [
+       "A",
+       "B"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "6sqc",
+    "model_category": "EXPERIMENTALLY DETERMINED",
+    "model_url": "https://www.ebi.ac.uk/pdbe/static/entry/6sqc_updated.cif",
+    "model_format": "MMCIF",
+    "model_page_url": "https://www.ebi.ac.uk/pdbe/entry/pdb/6sqc",
+    "provider": "PDBe",
+    "created": "2019-09-03",
+    "sequence_identity": 48.0,
+    "uniprot_start": 2046,
+    "uniprot_end": 2049,
+    "coverage": 0.022,
+    "experimental_method": "X-RAY DIFFRACTION",
+    "resolution": 2.28,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P0AEX9",
+      "identifier_category": "UNIPROT",
+      "description": "Maltose/maltodextrin-binding periplasmic protein,CREB-binding protein",
+      "chain_ids": [
+       "A"
+      ]
+     },
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q92793",
+      "identifier_category": "UNIPROT",
+      "description": "Maltose/maltodextrin-binding periplasmic protein,CREB-binding protein",
+      "chain_ids": [
+       "A"
+      ]
+     },
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q9Y6Q9",
+      "identifier_category": "UNIPROT",
+      "description": "Nuclear receptor coactivator 3",
+      "chain_ids": [
+       "B"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "6sqc",
+    "model_category": "EXPERIMENTALLY DETERMINED",
+    "model_url": "https://www.ebi.ac.uk/pdbe/static/entry/6sqc_updated.cif",
+    "model_format": "MMCIF",
+    "model_page_url": "https://www.ebi.ac.uk/pdbe/entry/pdb/6sqc",
+    "provider": "PDBe",
+    "created": "2019-09-03",
+    "sequence_identity": 48.0,
+    "uniprot_start": 2061,
+    "uniprot_end": 2112,
+    "coverage": 0.022,
+    "experimental_method": "X-RAY DIFFRACTION",
+    "resolution": 2.28,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P0AEX9",
+      "identifier_category": "UNIPROT",
+      "description": "Maltose/maltodextrin-binding periplasmic protein,CREB-binding protein",
+      "chain_ids": [
+       "A"
+      ]
+     },
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q92793",
+      "identifier_category": "UNIPROT",
+      "description": "Maltose/maltodextrin-binding periplasmic protein,CREB-binding protein",
+      "chain_ids": [
+       "A"
+      ]
+     },
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q9Y6Q9",
+      "identifier_category": "UNIPROT",
+      "description": "Nuclear receptor coactivator 3",
+      "chain_ids": [
+       "B"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "PED00064e001",
+    "model_category": "CONFORMATIONAL ENSEMBLE",
+    "model_url": "https://deposition.proteinensemble.org/v1/entries/PED00064/ensembles/e001/ensemble-sample/",
+    "model_format": "MMCIF",
+    "model_page_url": "https://proteinensemble.org/entries/PED00064",
+    "provider": "PED",
+    "number_of_conformers": 20.0,
+    "ensemble_sample_url": "https://deposition.proteinensemble.org/v1/entries/PED00064/ensembles/e001/ensemble-sample/",
+    "ensemble_sample_format": "MMCIF",
+    "created": "2020-10-01",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1081,
+    "uniprot_end": 1197,
+    "coverage": 0.04791154791154791,
+    "entities": []
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "PED00162e001",
+    "model_category": "CONFORMATIONAL ENSEMBLE",
+    "model_url": "https://deposition.proteinensemble.org/v1/entries/PED00162/ensembles/e001/ensemble-sample/",
+    "model_format": "MMCIF",
+    "model_page_url": "https://proteinensemble.org/entries/PED00162",
+    "provider": "PED",
+    "number_of_conformers": 16.0,
+    "ensemble_sample_url": "https://deposition.proteinensemble.org/v1/entries/PED00162/ensembles/e001/ensemble-sample/",
+    "ensemble_sample_format": "MMCIF",
+    "created": "2020-10-01",
+    "sequence_identity": 0.990625,
+    "uniprot_start": 2122,
+    "uniprot_end": 2441,
+    "coverage": 0.13022113022113022,
+    "entities": []
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "PED09322e001",
+    "model_category": "CONFORMATIONAL ENSEMBLE",
+    "model_url": "https://deposition.proteinensemble.org/v1/entries/PED09322/ensembles/e001/ensemble-sample/",
+    "model_format": "MMCIF",
+    "model_page_url": "https://proteinensemble.org/entries/PED09322",
+    "provider": "PED",
+    "number_of_conformers": 100.0,
+    "ensemble_sample_url": "https://deposition.proteinensemble.org/v1/entries/PED09322/ensembles/e001/ensemble-sample/",
+    "ensemble_sample_format": "MMCIF",
+    "created": "2020-10-01",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 206,
+    "coverage": 1.0,
+    "entities": []
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "Q92793_587-673:2lqi.1.A",
+    "model_category": "TEMPLATE-BASED",
+    "model_url": "https://swissmodel.expasy.org/3d-beacons/uniprot/Q92793.cif?range=587-673&template=2lqi.1.A&provider=swissmodel",
+    "model_format": "MMCIF",
+    "model_type": "ATOMIC",
+    "model_page_url": "https://swissmodel.expasy.org/repository/uniprot/Q92793?range=587-673&template=2lqi.1.A",
+    "provider": "SWISS-MODEL",
+    "created": "2026-10-05",
+    "sequence_identity": 1.0,
+    "uniprot_start": 587,
+    "uniprot_end": 673,
+    "coverage": 0.036,
+    "confidence_type": "QMEANDisCo",
+    "confidence_version": "4.6.0",
+    "confidence_avg_local_score": 0.693,
+    "oligomeric_state": "MONOMER",
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q92793",
+      "identifier_category": "UNIPROT",
+      "description": "model based on template 2lqi.1.A: CREB-binding protein",
+      "chain_ids": [
+       "A"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "Q92793_1086-1701:8haj.1.K",
+    "model_category": "TEMPLATE-BASED",
+    "model_url": "https://swissmodel.expasy.org/3d-beacons/uniprot/Q92793.cif?range=1086-1701&template=8haj.1.K&provider=swissmodel",
+    "model_format": "MMCIF",
+    "model_type": "ATOMIC",
+    "model_page_url": "https://swissmodel.expasy.org/repository/uniprot/Q92793?range=1086-1701&template=8haj.1.K",
+    "provider": "SWISS-MODEL",
+    "created": "2026-10-05",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1086,
+    "uniprot_end": 1701,
+    "coverage": 0.252,
+    "confidence_type": "QMEANDisCo",
+    "confidence_version": "4.6.0",
+    "confidence_avg_local_score": 0.627,
+    "oligomeric_state": "MONOMER",
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q92793",
+      "identifier_category": "UNIPROT",
+      "description": "model based on template 8haj.1.K: Histone acetyltransferase p300",
+      "chain_ids": [
+       "K"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "AF-Q92793-F1",
+    "model_category": "AB-INITIO",
+    "model_url": "https://alphafold.ebi.ac.uk/files/AF-Q92793-F1-model_v6.cif",
+    "model_format": "MMCIF",
+    "model_type": null,
+    "model_page_url": "https://alphafold.ebi.ac.uk/entry/AF-Q92793-F1",
+    "provider": "AlphaFold DB",
+    "number_of_conformers": null,
+    "ensemble_sample_url": null,
+    "ensemble_sample_format": null,
+    "created": "2025-08-01T00:00:00Z",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 2442,
+    "coverage": 1.0,
+    "experimental_method": null,
+    "resolution": null,
+    "confidence_type": "pLDDT",
+    "confidence_version": null,
+    "confidence_avg_local_score": 52.53,
+    "oligomeric_state": "MONOMER",
+    "preferred_assembly_id": null,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q92793",
+      "identifier_category": "UNIPROT",
+      "description": "CREB-binding protein",
+      "chain_ids": [
+       "A"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "Q92793",
+    "model_category": "TEMPLATE-BASED",
+    "model_url": "https://alphafill.eu/v1/aff/Q92793",
+    "model_format": "MMCIF",
+    "model_page_url": "https://alphafill.eu/model?id=Q92793",
+    "provider": "AlphaFill",
+    "created": "2023-12-27",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 2442,
+    "coverage": 1.0,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "description": "CREB-binding protein",
+      "chain_ids": [
+       "A"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "description": "ZINC ION",
+      "chain_ids": [
+       "B",
+       "C",
+       "D",
+       "E",
+       "F",
+       "G",
+       "AB",
+       "AC",
+       "AD",
+       "AE",
+       "AF",
+       "AG"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "description": "COENZYME A",
+      "chain_ids": [
+       "H"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "ma-t3vr3-776",
+    "model_category": "AB-INITIO",
+    "model_url": "https://modelarchive.org/doi/10.5452/ma-t3vr3-776.cif",
+    "model_format": "MMCIF",
+    "model_type": "ATOMIC",
+    "model_page_url": "https://modelarchive.org/doi/10.5452/ma-t3vr3-776",
+    "provider": "ModelArchive",
+    "created": "2022-12-21",
+    "sequence_identity": 1.0,
+    "uniprot_start": 2347,
+    "uniprot_end": 2442,
+    "coverage": 0.03931203931203931,
+    "confidence_type": "pLDDT",
+    "confidence_avg_local_score": 82.423,
+    "oligomeric_state": "HETERODIMER",
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q13547",
+      "identifier_category": "UNIPROT",
+      "description": "Homo sapiens (Human) HDAC1 (Q13547; 1 - 392)",
+      "chain_ids": [
+       "A"
+      ]
+     },
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q92793",
+      "identifier_category": "UNIPROT",
+      "description": "Homo sapiens (Human) CREBBP (Q92793; 2347 - 2442)",
+      "chain_ids": [
+       "B"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "ma-t3vr3-886",
+    "model_category": "AB-INITIO",
+    "model_url": "https://modelarchive.org/doi/10.5452/ma-t3vr3-886.cif",
+    "model_format": "MMCIF",
+    "model_type": "ATOMIC",
+    "model_page_url": "https://modelarchive.org/doi/10.5452/ma-t3vr3-886",
+    "provider": "ModelArchive",
+    "created": "2022-12-21",
+    "sequence_identity": 1.0,
+    "uniprot_start": 2347,
+    "uniprot_end": 2442,
+    "coverage": 0.03931203931203931,
+    "confidence_type": "pLDDT",
+    "confidence_avg_local_score": 82.047,
+    "oligomeric_state": "HETERODIMER",
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q92769",
+      "identifier_category": "UNIPROT",
+      "description": "Homo sapiens (Human) HDAC2 (Q92769; 1 - 419)",
+      "chain_ids": [
+       "A"
+      ]
+     },
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "Q92793",
+      "identifier_category": "UNIPROT",
+      "description": "Homo sapiens (Human) CREBBP (Q92793; 2347 - 2442)",
+      "chain_ids": [
+       "B"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,193 @@
+{
+ "uniprot_entry": {
+  "ac": "P37840",
+  "id": "SYUA_HUMAN",
+  "uniprot_checksum": "90cc5e82b1e80478857674f92aa13efa",
+  "sequence_length": 140,
+  "segment_start": 1,
+  "segment_end": 140
+ },
+ "structures": [
+  {
+   "summary": {
+    "model_identifier": "8jjv",
+    "model_category": "EXPERIMENTALLY DETERMINED",
+    "model_url": "https://www.ebi.ac.uk/pdbe/static/entry/8jjv_updated.cif",
+    "model_format": "MMCIF",
+    "model_page_url": "https://www.ebi.ac.uk/pdbe/entry/pdb/8jjv",
+    "provider": "PDBe",
+    "created": "2023-05-31",
+    "sequence_identity": 100.0,
+    "uniprot_start": 43,
+    "uniprot_end": 56,
+    "coverage": 0.1,
+    "experimental_method": "X-RAY DIFFRACTION",
+    "resolution": 1.23,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P37840",
+      "identifier_category": "UNIPROT",
+      "description": "Alpha-synuclein peptide",
+      "chain_ids": [
+       "B"
+      ]
+     },
+     {
+      "entity_type": "NON-POLYMER",
+      "identifier": "GOL",
+      "identifier_category": "CCD",
+      "description": "GLYCEROL",
+      "chain_ids": [
+       "A"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "PED00006e001",
+    "model_category": "CONFORMATIONAL ENSEMBLE",
+    "model_url": "https://deposition.proteinensemble.org/v1/entries/PED00006/ensembles/e001/ensemble-sample/",
+    "model_format": "MMCIF",
+    "model_page_url": "https://proteinensemble.org/entries/PED00006",
+    "provider": "PED",
+    "number_of_conformers": 576.0,
+    "ensemble_sample_url": "https://deposition.proteinensemble.org/v1/entries/PED00006/ensembles/e001/ensemble-sample/",
+    "ensemble_sample_format": "MMCIF",
+    "created": "2020-10-01",
+    "sequence_identity": 1.0,
+    "uniprot_start": 73,
+    "uniprot_end": 83,
+    "coverage": 0.07857142857142857,
+    "entities": []
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "PED00024e001",
+    "model_category": "CONFORMATIONAL ENSEMBLE",
+    "model_url": "https://deposition.proteinensemble.org/v1/entries/PED00024/ensembles/e001/ensemble-sample/",
+    "model_format": "MMCIF",
+    "model_page_url": "https://proteinensemble.org/entries/PED00024",
+    "provider": "PED",
+    "number_of_conformers": 576.0,
+    "ensemble_sample_url": "https://deposition.proteinensemble.org/v1/entries/PED00024/ensembles/e001/ensemble-sample/",
+    "ensemble_sample_format": "MMCIF",
+    "created": "2020-10-01",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 140,
+    "coverage": 1.0,
+    "entities": []
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "PED00189e001",
+    "model_category": "CONFORMATIONAL ENSEMBLE",
+    "model_url": "https://deposition.proteinensemble.org/v1/entries/PED00189/ensembles/e001/ensemble-sample/",
+    "model_format": "MMCIF",
+    "model_page_url": "https://proteinensemble.org/entries/PED00189",
+    "provider": "PED",
+    "number_of_conformers": 34.0,
+    "ensemble_sample_url": "https://deposition.proteinensemble.org/v1/entries/PED00189/ensembles/e001/ensemble-sample/",
+    "ensemble_sample_format": "MMCIF",
+    "created": "2020-10-01",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 140,
+    "coverage": 1.0,
+    "entities": []
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "AF-P37840-F1",
+    "model_category": "AB-INITIO",
+    "model_url": "https://alphafold.ebi.ac.uk/files/AF-P37840-F1-model_v6.cif",
+    "model_format": "MMCIF",
+    "model_type": null,
+    "model_page_url": "https://alphafold.ebi.ac.uk/entry/AF-P37840-F1",
+    "provider": "AlphaFold DB",
+    "number_of_conformers": null,
+    "ensemble_sample_url": null,
+    "ensemble_sample_format": null,
+    "created": "2025-08-01T00:00:00Z",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 140,
+    "coverage": 1.0,
+    "experimental_method": null,
+    "resolution": null,
+    "confidence_type": "pLDDT",
+    "confidence_version": null,
+    "confidence_avg_local_score": 75.19,
+    "oligomeric_state": "MONOMER",
+    "preferred_assembly_id": null,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "identifier": "P37840",
+      "identifier_category": "UNIPROT",
+      "description": "Alpha-synuclein",
+      "chain_ids": [
+       "A"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "P37840",
+    "model_category": "TEMPLATE-BASED",
+    "model_url": "https://alphafill.eu/v1/aff/P37840",
+    "model_format": "MMCIF",
+    "model_page_url": "https://alphafill.eu/model?id=P37840",
+    "provider": "AlphaFill",
+    "created": "2023-11-29",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 140,
+    "coverage": 1.0,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "entity_poly_type": "POLYPEPTIDE(L)",
+      "description": "Alpha-synuclein",
+      "chain_ids": [
+       "A"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "model_identifier": "CHS.40914.3",
+    "model_category": "AB-INITIO",
+    "model_url": "https://data.isoform.io/pdb/CHS.40914.3.pdb",
+    "model_format": "PDB",
+    "provider": "isoform.io",
+    "created": "2022-06-05",
+    "sequence_identity": 1.0,
+    "uniprot_start": 1,
+    "uniprot_end": 140,
+    "coverage": 1.0,
+    "entities": [
+     {
+      "entity_type": "POLYMER",
+      "description": "Alpha-synuclein",
+      "chain_ids": [
+       "A"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

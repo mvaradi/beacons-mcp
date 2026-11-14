@@ -1,0 +1,331 @@
+{
+ "results": [
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P68871",
+   "uniProtkbId": "HBB_HUMAN",
+   "organism": {
+    "scientificName": "Homo sapiens",
+    "commonName": "Human",
+    "taxonId": 9606,
+    "lineage": [
+     "Eukaryota",
+     "Metazoa",
+     "Chordata",
+     "Craniata",
+     "Vertebrata",
+     "Euteleostomi",
+     "Mammalia",
+     "Eutheria",
+     "Euarchontoglires",
+     "Primates",
+     "Haplorrhini",
+     "Catarrhini",
+     "Hominidae",
+     "Homo"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Hemoglobin subunit beta"
+     }
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "value": "Beta-globin"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Hemoglobin beta chain"
+      }
+     }
+    ],
+    "contains": [
+     {
+      "recommendedName": {
+       "fullName": {
+        "value": "LVV-hemorphin-7"
+       }
+      }
+     },
+     {
+      "recommendedName": {
+       "fullName": {
+        "value": "Spinorphin"
+       }
+      }
+     }
+    ]
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "HBB"
+     }
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI00000015C9"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P02100",
+   "uniProtkbId": "HBE_HUMAN",
+   "organism": {
+    "scientificName": "Homo sapiens",
+    "commonName": "Human",
+    "taxonId": 9606,
+    "lineage": [
+     "Eukaryota",
+     "Metazoa",
+     "Chordata",
+     "Craniata",
+     "Vertebrata",
+     "Euteleostomi",
+     "Mammalia",
+     "Eutheria",
+     "Euarchontoglires",
+     "Primates",
+     "Haplorrhini",
+     "Catarrhini",
+     "Hominidae",
+     "Homo"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Hemoglobin subunit epsilon"
+     }
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "value": "Epsilon-globin"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Hemoglobin epsilon chain"
+      }
+     }
+    ]
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "HBE1"
+     },
+     "synonyms": [
+      {
+       "value": "HBE"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI00000004B9"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P02042",
+   "uniProtkbId": "HBD_HUMAN",
+   "organism": {
+    "scientificName": "Homo sapiens",
+    "commonName": "Human",
+    "taxonId": 9606,
+    "lineage": [
+     "Eukaryota",
+     "Metazoa",
+     "Chordata",
+     "Craniata",
+     "Vertebrata",
+     "Euteleostomi",
+     "Mammalia",
+     "Eutheria",
+     "Euarchontoglires",
+     "Primates",
+     "Haplorrhini",
+     "Catarrhini",
+     "Hominidae",
+     "Homo"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Hemoglobin subunit delta"
+     }
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "value": "Delta-globin"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Hemoglobin delta chain"
+      }
+     }
+    ]
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "HBD"
+     }
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI0000161DC2"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P02008",
+   "uniProtkbId": "HBAZ_HUMAN",
+   "organism": {
+    "scientificName": "Homo sapiens",
+    "commonName": "Human",
+    "taxonId": 9606,
+    "lineage": [
+     "Eukaryota",
+     "Metazoa",
+     "Chordata",
+     "Craniata",
+     "Vertebrata",
+     "Euteleostomi",
+     "Mammalia",
+     "Eutheria",
+     "Euarchontoglires",
+     "Primates",
+     "Haplorrhini",
+     "Catarrhini",
+     "Hominidae",
+     "Homo"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Hemoglobin subunit zeta"
+     }
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "value": "HBAZ"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Hemoglobin zeta chain"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Zeta-globin"
+      }
+     }
+    ]
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "HBZ"
+     },
+     "synonyms": [
+      {
+       "value": "HBZ2"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI000013CD9A"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P69905",
+   "uniProtkbId": "HBA_HUMAN",
+   "organism": {
+    "scientificName": "Homo sapiens",
+    "commonName": "Human",
+    "taxonId": 9606,
+    "lineage": [
+     "Eukaryota",
+     "Metazoa",
+     "Chordata",
+     "Craniata",
+     "Vertebrata",
+     "Euteleostomi",
+     "Mammalia",
+     "Eutheria",
+     "Euarchontoglires",
+     "Primates",
+     "Haplorrhini",
+     "Catarrhini",
+     "Hominidae",
+     "Homo"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Hemoglobin subunit alpha"
+     }
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "value": "Alpha-globin"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Hemoglobin alpha chain"
+      }
+     }
+    ],
+    "contains": [
+     {
+      "recommendedName": {
+       "fullName": {
+        "evidences": [
+         {
+          "evidenceCode": "ECO:0000303",
+          "source": "PubMed",
+          "id": "18077343"
+         }
+        ],
+        "value": "Hemopressin"
+       }
+      }
+     }
+    ]
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "HBA1"
+     }
+    },
+    {
+     "geneName": {
+      "value": "HBA2"
+     }
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI0000000239"
+   }
+  }
+ ]
+}

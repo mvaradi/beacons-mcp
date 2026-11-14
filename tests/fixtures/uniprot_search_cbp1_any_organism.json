@@ -1,0 +1,831 @@
+{
+ "results": [
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P50454",
+   "uniProtkbId": "SERPH_HUMAN",
+   "organism": {
+    "scientificName": "Homo sapiens",
+    "commonName": "Human",
+    "taxonId": 9606,
+    "lineage": [
+     "Eukaryota",
+     "Metazoa",
+     "Chordata",
+     "Craniata",
+     "Vertebrata",
+     "Euteleostomi",
+     "Mammalia",
+     "Eutheria",
+     "Euarchontoglires",
+     "Primates",
+     "Haplorrhini",
+     "Catarrhini",
+     "Hominidae",
+     "Homo"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Serpin H1"
+     }
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "value": "47 kDa heat shock protein"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Arsenic-transactivated protein 3"
+      },
+      "shortNames": [
+       {
+        "value": "AsTP3"
+       }
+      ]
+     },
+     {
+      "fullName": {
+       "value": "Cell proliferation-inducing gene 14 protein"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Collagen-binding protein"
+      },
+      "shortNames": [
+       {
+        "value": "Colligin"
+       }
+      ]
+     },
+     {
+      "fullName": {
+       "value": "Rheumatoid arthritis-related antigen RA-A47"
+      }
+     }
+    ],
+    "flag": "Precursor"
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "SERPINH1"
+     },
+     "synonyms": [
+      {
+       "value": "CBP1"
+      },
+      {
+       "value": "CBP2"
+      },
+      {
+       "value": "HSP47"
+      },
+      {
+       "value": "SERPINH2"
+      }
+     ],
+     "orfNames": [
+      {
+       "value": "PIG14"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI00001271B6"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "Q9XIM0",
+   "uniProtkbId": "MEE14_ARATH",
+   "organism": {
+    "scientificName": "Arabidopsis thaliana",
+    "commonName": "Mouse-ear cress",
+    "taxonId": 3702,
+    "lineage": [
+     "Eukaryota",
+     "Viridiplantae",
+     "Streptophyta",
+     "Embryophyta",
+     "Tracheophyta",
+     "Spermatophyta",
+     "Magnoliopsida",
+     "eudicotyledons",
+     "Gunneridae",
+     "Pentapetalae",
+     "rosids",
+     "malvids",
+     "Brassicales",
+     "Brassicaceae",
+     "Camelineae",
+     "Arabidopsis"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "CCG-binding protein 1"
+     },
+     "shortNames": [
+      {
+       "evidences": [
+        {
+         "evidenceCode": "ECO:0000303",
+         "source": "PubMed",
+         "id": "26462908"
+        }
+       ],
+       "value": "AtCBP1"
+      }
+     ]
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "evidences": [
+        {
+         "evidenceCode": "ECO:0000305"
+        }
+       ],
+       "value": "Protein MATERNAL EFFECT EMBRYO ARREST 14"
+      }
+     }
+    ]
+   },
+   "genes": [
+    {
+     "geneName": {
+      "evidences": [
+       {
+        "evidenceCode": "ECO:0000303",
+        "source": "PubMed",
+        "id": "15634699"
+       }
+      ],
+      "value": "MEE14"
+     },
+     "synonyms": [
+      {
+       "evidences": [
+        {
+         "evidenceCode": "ECO:0000303",
+         "source": "PubMed",
+         "id": "26462908"
+        }
+       ],
+       "value": "CBP1"
+      }
+     ],
+     "orderedLocusNames": [
+      {
+       "evidences": [
+        {
+         "evidenceCode": "ECO:0000312",
+         "source": "Araport",
+         "id": "AT2G15890"
+        }
+       ],
+       "value": "At2g15890"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI0000052A04"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P19324",
+   "uniProtkbId": "SERPH_MOUSE",
+   "organism": {
+    "scientificName": "Mus musculus",
+    "commonName": "Mouse",
+    "taxonId": 10090,
+    "lineage": [
+     "Eukaryota",
+     "Metazoa",
+     "Chordata",
+     "Craniata",
+     "Vertebrata",
+     "Euteleostomi",
+     "Mammalia",
+     "Eutheria",
+     "Euarchontoglires",
+     "Glires",
+     "Rodentia",
+     "Myomorpha",
+     "Muroidea",
+     "Muridae",
+     "Murinae",
+     "Mus",
+     "Mus"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Serpin H1"
+     }
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "value": "47 kDa heat shock protein"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Collagen-binding protein"
+      },
+      "shortNames": [
+       {
+        "value": "Colligin"
+       }
+      ]
+     },
+     {
+      "fullName": {
+       "value": "Serine protease inhibitor J6"
+      }
+     }
+    ],
+    "flag": "Precursor"
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "Serpinh1"
+     },
+     "synonyms": [
+      {
+       "value": "Cbp1"
+      },
+      {
+       "value": "Hsp47"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI0000003F86"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P29457",
+   "uniProtkbId": "SERPH_RAT",
+   "organism": {
+    "scientificName": "Rattus norvegicus",
+    "commonName": "Rat",
+    "taxonId": 10116,
+    "lineage": [
+     "Eukaryota",
+     "Metazoa",
+     "Chordata",
+     "Craniata",
+     "Vertebrata",
+     "Euteleostomi",
+     "Mammalia",
+     "Eutheria",
+     "Euarchontoglires",
+     "Glires",
+     "Rodentia",
+     "Myomorpha",
+     "Muroidea",
+     "Muridae",
+     "Murinae",
+     "Rattus"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Serpin H1"
+     }
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "value": "47 kDa heat shock protein"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Collagen-binding protein"
+      },
+      "shortNames": [
+       {
+        "value": "Colligin"
+       }
+      ]
+     },
+     {
+      "fullName": {
+       "value": "GP46"
+      }
+     }
+    ],
+    "flag": "Precursor"
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "Serpinh1"
+     },
+     "synonyms": [
+      {
+       "value": "Cbp1"
+      },
+      {
+       "value": "Hsp47"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI000012CC28"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P07519",
+   "uniProtkbId": "CBP1_HORVU",
+   "organism": {
+    "scientificName": "Hordeum vulgare",
+    "commonName": "Barley",
+    "taxonId": 4513,
+    "lineage": [
+     "Eukaryota",
+     "Viridiplantae",
+     "Streptophyta",
+     "Embryophyta",
+     "Tracheophyta",
+     "Spermatophyta",
+     "Magnoliopsida",
+     "Liliopsida",
+     "Poales",
+     "Poaceae",
+     "BOP clade",
+     "Pooideae",
+     "Triticodae",
+     "Triticeae",
+     "Hordeinae",
+     "Hordeum"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Serine carboxypeptidase 1"
+     },
+     "ecNumbers": [
+      {
+       "value": "3.4.16.5"
+      }
+     ]
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "value": "CP-MI"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Carboxypeptidase C"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Serine carboxypeptidase I"
+      }
+     }
+    ],
+    "contains": [
+     {
+      "recommendedName": {
+       "fullName": {
+        "value": "Serine carboxypeptidase 1 chain A"
+       }
+      },
+      "alternativeNames": [
+       {
+        "fullName": {
+         "value": "Serine carboxypeptidase I chain A"
+        }
+       }
+      ]
+     },
+     {
+      "recommendedName": {
+       "fullName": {
+        "value": "Serine carboxypeptidase 1 chain B"
+       }
+      },
+      "alternativeNames": [
+       {
+        "fullName": {
+         "value": "Serine carboxypeptidase I chain B"
+        }
+       }
+      ]
+     }
+    ],
+    "flag": "Precursor"
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "CBP1"
+     },
+     "synonyms": [
+      {
+       "value": "CXP;1"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI00001271AF"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "Q8I2D9",
+   "uniProtkbId": "GEX10_PLAF7",
+   "organism": {
+    "scientificName": "Plasmodium falciparum (isolate 3D7)",
+    "taxonId": 36329,
+    "evidences": [
+     {
+      "evidenceCode": "ECO:0000312",
+      "source": "Proteomes",
+      "id": "UP000001450"
+     }
+    ],
+    "lineage": [
+     "Eukaryota",
+     "Sar",
+     "Alveolata",
+     "Apicomplexa",
+     "Aconoidasida",
+     "Haemosporida",
+     "Plasmodiidae",
+     "Plasmodium",
+     "Laverania"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "evidences": [
+       {
+        "evidenceCode": "ECO:0000303",
+        "source": "PubMed",
+        "id": "27653778"
+       }
+      ],
+      "value": "CX3CL1-binding protein 1"
+     }
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "evidences": [
+        {
+         "evidenceCode": "ECO:0000303",
+         "source": "PubMed",
+         "id": "20332084"
+        }
+       ],
+       "value": "Gametocyte exported protein 10"
+      },
+      "shortNames": [
+       {
+        "evidences": [
+         {
+          "evidenceCode": "ECO:0000303",
+          "source": "PubMed",
+          "id": "20332084"
+         }
+        ],
+        "value": "PfGEXP10"
+       }
+      ]
+     }
+    ],
+    "flag": "Precursor"
+   },
+   "genes": [
+    {
+     "geneName": {
+      "evidences": [
+       {
+        "evidenceCode": "ECO:0000303",
+        "source": "PubMed",
+        "id": "27653778"
+       }
+      ],
+      "value": "CBP1"
+     },
+     "synonyms": [
+      {
+       "evidences": [
+        {
+         "evidenceCode": "ECO:0000303",
+         "source": "PubMed",
+         "id": "20332084"
+        }
+       ],
+       "value": "GEXP10"
+      }
+     ],
+     "orfNames": [
+      {
+       "evidences": [
+        {
+         "evidenceCode": "ECO:0000312",
+         "source": "EMBL",
+         "id": "CAD48950.1"
+        }
+       ],
+       "value": "PF3D7_0113900"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI0000086348"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P42529",
+   "uniProtkbId": "CBPA_DICDI",
+   "organism": {
+    "scientificName": "Dictyostelium discoideum",
+    "commonName": "Social amoeba",
+    "taxonId": 44689,
+    "lineage": [
+     "Eukaryota",
+     "Amoebozoa",
+     "Evosea",
+     "Eumycetozoa",
+     "Dictyostelia",
+     "Dictyosteliales",
+     "Dictyosteliaceae",
+     "Dictyostelium"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Calcium-binding protein A"
+     }
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "value": "Calcium-binding protein 1"
+      }
+     }
+    ]
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "cbpA"
+     },
+     "synonyms": [
+      {
+       "value": "cbp1"
+      },
+      {
+       "value": "cbpB"
+      }
+     ],
+     "orfNames": [
+      {
+       "value": "DDB_G0276759"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI0000002B51"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "O42720",
+   "uniProtkbId": "CBP1_AJECG",
+   "organism": {
+    "scientificName": "Ajellomyces capsulatus (strain G186AR / H82 / ATCC MYA-2454 / RMSCC 2432)",
+    "commonName": "Darling's disease fungus",
+    "synonyms": [
+     "Histoplasma capsulatum"
+    ],
+    "taxonId": 447093,
+    "lineage": [
+     "Eukaryota",
+     "Fungi",
+     "Dikarya",
+     "Ascomycota",
+     "Pezizomycotina",
+     "Eurotiomycetes",
+     "Eurotiomycetidae",
+     "Onygenales",
+     "Ajellomycetaceae",
+     "Histoplasma"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Calcium-binding protein"
+     },
+     "shortNames": [
+      {
+       "value": "CBP"
+      }
+     ]
+    },
+    "flag": "Precursor"
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "CBP1"
+     },
+     "orfNames": [
+      {
+       "value": "HCBG_05800"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI000006C825"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P07252",
+   "uniProtkbId": "CBP8_YEAST",
+   "organism": {
+    "scientificName": "Saccharomyces cerevisiae (strain ATCC 204508 / S288c)",
+    "commonName": "Baker's yeast",
+    "taxonId": 559292,
+    "lineage": [
+     "Eukaryota",
+     "Fungi",
+     "Dikarya",
+     "Ascomycota",
+     "Saccharomycotina",
+     "Saccharomycetes",
+     "Saccharomycetales",
+     "Saccharomycetaceae",
+     "Saccharomyces"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Cytochrome B pre-mRNA-processing protein 1"
+     }
+    }
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "CBP1"
+     },
+     "orderedLocusNames": [
+      {
+       "value": "YJL209W"
+      }
+     ],
+     "orfNames": [
+      {
+       "value": "HRA654"
+      },
+      {
+       "value": "J0242"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI00001271B3"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P37890",
+   "uniProtkbId": "CBP1_ORYSJ",
+   "organism": {
+    "scientificName": "Oryza sativa subsp. japonica",
+    "commonName": "Rice",
+    "taxonId": 39947,
+    "lineage": [
+     "Eukaryota",
+     "Viridiplantae",
+     "Streptophyta",
+     "Embryophyta",
+     "Tracheophyta",
+     "Spermatophyta",
+     "Magnoliopsida",
+     "Liliopsida",
+     "Poales",
+     "Poaceae",
+     "BOP clade",
+     "Oryzoideae",
+     "Oryzeae",
+     "Oryzinae",
+     "Oryza",
+     "Oryza sativa"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Serine carboxypeptidase 1"
+     },
+     "ecNumbers": [
+      {
+       "value": "3.4.16.5"
+      }
+     ]
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "value": "Carboxypeptidase C"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Serine carboxypeptidase I"
+      }
+     }
+    ],
+    "contains": [
+     {
+      "recommendedName": {
+       "fullName": {
+        "value": "Serine carboxypeptidase 1 chain A"
+       }
+      },
+      "alternativeNames": [
+       {
+        "fullName": {
+         "value": "Serine carboxypeptidase I chain A"
+        }
+       }
+      ]
+     },
+     {
+      "recommendedName": {
+       "fullName": {
+        "value": "Serine carboxypeptidase 1 chain B"
+       }
+      },
+      "alternativeNames": [
+       {
+        "fullName": {
+         "value": "Serine carboxypeptidase I chain B"
+        }
+       }
+      ]
+     }
+    ],
+    "flag": "Precursor"
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "CBP1"
+     },
+     "orderedLocusNames": [
+      {
+       "value": "Os12g0257000"
+      },
+      {
+       "value": "LOC_Os12g15470"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI00001271B0"
+   }
+  }
+ ]
+}

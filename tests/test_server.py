@@ -1,65 +1,122 @@
+import tomllib
+from pathlib import Path
+
 import pytest
-from mcp import Client
+from conftest import error_text
 from mcp.server.mcpserver import MCPServer
 
+from beacons_mcp import __version__
 from beacons_mcp.server import mcp
 
 
-@pytest.fixture
-def anyio_backend():
-    return "asyncio"
+def flat(text: str) -> str:
+    return " ".join(text.split())
 
 
-@pytest.fixture
-async def client():
-    async with Client(mcp) as c:
-        yield c
-
-
-@pytest.mark.anyio
-async def test_hello_returns_greeting(client):
-    result = await client.call_tool("hello", {"name": "Ada"})
-
-    assert not result.is_error
-    assert result.structured_content == {"result": "Hello, Ada!"}
-
-
-@pytest.mark.anyio
-async def test_hello_tool_schema(client):
+async def get_tool(client, name):
     listed = await client.list_tools()
-    tool = next(t for t in listed.tools if t.name == "hello")
+    return next(t for t in listed.tools if t.name == name)
+
+
+def test_version_matches_pyproject():
+    pyproject = tomllib.loads(
+        (Path(__file__).parent.parent / "pyproject.toml").read_text(encoding="utf-8")
+    )
+    assert pyproject["project"]["version"] == __version__
+    assert mcp.version == __version__
+
+
+@pytest.mark.anyio
+async def test_exposes_exactly_the_two_tools(client):
+    listed = await client.list_tools()
+    assert {t.name for t in listed.tools} == {"search_proteins", "find_structures"}
+
+
+@pytest.mark.anyio
+async def test_search_proteins_schema(client):
+    tool = await get_tool(client, "search_proteins")
 
     # Print so `pytest -s` shows exactly what the model would be shown.
     print("DESCRIPTION:\n", tool.description)
     print("INPUT SCHEMA:\n", tool.input_schema)
 
-    # The description is the docstring: summary plus usage guidance. Parameter
-    # docs deliberately do NOT live here (no "Args:" block); see below.
-    assert tool.description.startswith("Return a one-sentence greeting")
-    assert "never use it to look up structures" in tool.description
+    # The description is plain paragraphs: no docstring "Args:" block, no
+    # indentation, and the organism rule is stated verbatim.
     assert "Args:" not in tool.description
+    assert "\n    " not in tool.description
+    assert (
+        "If the user has not named an organism, ask them. Do not assume human."
+        in tool.description
+    )
+    assert "reviewed" in tool.description
 
-    # The input schema is generated from the signature: one required string.
     schema = tool.input_schema
-    assert schema["type"] == "object"
-    assert schema["required"] == ["name"]
-    assert set(schema["properties"]) == {"name"}
-    name_schema = schema["properties"]["name"]
-    assert name_schema["type"] == "string"
-    # Pattern for every tool: parameters are documented with
-    # Annotated[..., Field(description=...)], which lands in the schema where
-    # the model reads it per parameter.
-    assert "non-whitespace" in name_schema["description"]
+    assert schema["required"] == ["query", "organism"]
+    assert set(schema["properties"]) == {"query", "organism", "max_results"}  # no ctx
+    for prop in schema["properties"].values():
+        assert prop["description"]
+        assert prop["examples"]  # every parameter documents an example value
+    assert schema["properties"]["organism"]["type"] == "string"
+    assert schema["properties"]["max_results"]["default"] == 5
+    assert schema["properties"]["max_results"]["minimum"] == 1
+    assert schema["properties"]["max_results"]["maximum"] == 25
+    assert tool.output_schema["properties"]["candidates"]
+    assert tool.annotations.read_only_hint is True
+
+
+@pytest.mark.anyio
+async def test_find_structures_schema(client):
+    tool = await get_tool(client, "find_structures")
+
+    print("DESCRIPTION:\n", tool.description)
+    print("INPUT SCHEMA:\n", tool.input_schema)
+
+    assert "Args:" not in tool.description
+    assert "search_proteins" in tool.description  # tells the model where names go
+    assert "selection" in flat(tool.description)
+
+    schema = tool.input_schema
+    assert schema["required"] == ["uniprot_accession"]
+    assert set(schema["properties"]) == {"uniprot_accession", "max_results"}
+    for prop in schema["properties"].values():
+        assert prop["description"]
+        assert prop["examples"]
+    assert schema["properties"]["max_results"]["default"] == 10
+    assert schema["properties"]["max_results"]["maximum"] == 50
+    assert tool.output_schema["properties"]["models"]
+    assert tool.annotations.read_only_hint is True
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("tool", "arguments"),
+    [
+        ("search_proteins", {"query": "HBA", "organism": "human", "max_results": 0}),
+        ("search_proteins", {"query": "HBA", "organism": "human", "max_results": 26}),
+        ("find_structures", {"uniprot_accession": "P69905", "max_results": 0}),
+        ("find_structures", {"uniprot_accession": "P69905", "max_results": 51}),
+        ("search_proteins", {"query": "HBA"}),  # organism is required
+    ],
+)
+async def test_invalid_arguments_are_rejected_before_any_http(
+    client, respx_mock, tool, arguments
+):
+    result = await client.call_tool(tool, arguments)
+
+    assert result.is_error
+    assert not respx_mock.calls
 
 
 @pytest.mark.anyio
 async def test_learning_unexpected_exception_message_is_not_leaked():
-    """Learning test: pins SDK behaviour we depend on (Q4).
+    """Learning test: pins SDK behaviour we depend on.
 
     A tool that crashes with a non-ToolError exception must not leak that
     exception's text to the model. Uses a throwaway server so the public
     server never gets a deliberately broken tool.
     """
+    from mcp import Client
+
     throwaway = MCPServer("throwaway", version="0.0.0")
 
     @throwaway.tool()
@@ -76,3 +133,19 @@ async def test_learning_unexpected_exception_message_is_not_leaked():
     assert all("secret-xyz" not in text for text in texts)
     # Stronger: the secret must not appear anywhere in the serialised result.
     assert "secret-xyz" not in result.model_dump_json()
+
+
+@pytest.mark.anyio
+async def test_unexpected_crash_in_a_real_tool_does_not_leak(client, respx_mock):
+    """The same guarantee on our own tools: a malformed Hub body is not echoed back."""
+    respx_mock.get(url__regex=r".*/uniprot/summary/P69905\.json").respond(
+        200,
+        json={
+            "uniprot_entry": {"ac": "P69905"},
+            "structures": [{"unexpected": "secret-xyz"}],
+        },
+    )
+
+    result = await client.call_tool("find_structures", {"uniprot_accession": "P69905"})
+
+    assert "secret-xyz" not in error_text(result)

@@ -1,0 +1,104 @@
+{
+ "results": [
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P50454",
+   "uniProtkbId": "SERPH_HUMAN",
+   "organism": {
+    "scientificName": "Homo sapiens",
+    "commonName": "Human",
+    "taxonId": 9606,
+    "lineage": [
+     "Eukaryota",
+     "Metazoa",
+     "Chordata",
+     "Craniata",
+     "Vertebrata",
+     "Euteleostomi",
+     "Mammalia",
+     "Eutheria",
+     "Euarchontoglires",
+     "Primates",
+     "Haplorrhini",
+     "Catarrhini",
+     "Hominidae",
+     "Homo"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Serpin H1"
+     }
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "value": "47 kDa heat shock protein"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Arsenic-transactivated protein 3"
+      },
+      "shortNames": [
+       {
+        "value": "AsTP3"
+       }
+      ]
+     },
+     {
+      "fullName": {
+       "value": "Cell proliferation-inducing gene 14 protein"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Collagen-binding protein"
+      },
+      "shortNames": [
+       {
+        "value": "Colligin"
+       }
+      ]
+     },
+     {
+      "fullName": {
+       "value": "Rheumatoid arthritis-related antigen RA-A47"
+      }
+     }
+    ],
+    "flag": "Precursor"
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "SERPINH1"
+     },
+     "synonyms": [
+      {
+       "value": "CBP1"
+      },
+      {
+       "value": "CBP2"
+      },
+      {
+       "value": "HSP47"
+      },
+      {
+       "value": "SERPINH2"
+      }
+     ],
+     "orfNames": [
+      {
+       "value": "PIG14"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI00001271B6"
+   }
+  }
+ ]
+}

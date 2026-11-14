@@ -9,6 +9,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "httpx>=0.28.1",
     "mcp>=2.3,<3",
     "pydantic>=2",
 ]
@@ -24,8 +25,14 @@ build-backend = "uv_build"
 dev = [
     "mcp[cli]>=2.3,<3",
     "pytest",
+    "respx>=0.23.1",
     "ruff>=0.17.5",
 ]
 
-[tool.pytest.ini_options] 
+[tool.pytest.ini_options]
 testpaths = ["tests"]
+# Live tests hit the real UniProt and 3D-Beacons services; run them with `pytest -m live`.
+addopts = "-m 'not live'"
+markers = [
+    "live: calls the real UniProt / 3D-Beacons services (skipped by default)",
+]

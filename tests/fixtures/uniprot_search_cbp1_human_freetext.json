@@ -1,0 +1,322 @@
+{
+ "results": [
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P15085",
+   "uniProtkbId": "CBPA1_HUMAN",
+   "organism": {
+    "scientificName": "Homo sapiens",
+    "commonName": "Human",
+    "taxonId": 9606,
+    "lineage": [
+     "Eukaryota",
+     "Metazoa",
+     "Chordata",
+     "Craniata",
+     "Vertebrata",
+     "Euteleostomi",
+     "Mammalia",
+     "Eutheria",
+     "Euarchontoglires",
+     "Primates",
+     "Haplorrhini",
+     "Catarrhini",
+     "Hominidae",
+     "Homo"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "evidences": [
+       {
+        "evidenceCode": "ECO:0000305"
+       }
+      ],
+      "value": "Carboxypeptidase A1"
+     },
+     "ecNumbers": [
+      {
+       "evidences": [
+        {
+         "evidenceCode": "ECO:0000269",
+         "source": "PubMed",
+         "id": "20385563"
+        },
+        {
+         "evidenceCode": "ECO:0000269",
+         "source": "PubMed",
+         "id": "8806703"
+        }
+       ],
+       "value": "3.4.17.1"
+      }
+     ]
+    },
+    "flag": "Precursor"
+   },
+   "genes": [
+    {
+     "geneName": {
+      "evidences": [
+       {
+        "evidenceCode": "ECO:0000312",
+        "source": "HGNC",
+        "id": "HGNC:2296"
+       }
+      ],
+      "value": "CPA1"
+     },
+     "synonyms": [
+      {
+       "value": "CPA"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI000004D332"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P78423",
+   "uniProtkbId": "X3CL1_HUMAN",
+   "organism": {
+    "scientificName": "Homo sapiens",
+    "commonName": "Human",
+    "taxonId": 9606,
+    "lineage": [
+     "Eukaryota",
+     "Metazoa",
+     "Chordata",
+     "Craniata",
+     "Vertebrata",
+     "Euteleostomi",
+     "Mammalia",
+     "Eutheria",
+     "Euarchontoglires",
+     "Primates",
+     "Haplorrhini",
+     "Catarrhini",
+     "Hominidae",
+     "Homo"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "evidences": [
+       {
+        "evidenceCode": "ECO:0000303",
+        "source": "PubMed",
+        "id": "23125415"
+       }
+      ],
+      "value": "Fractalkine"
+     }
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "evidences": [
+        {
+         "evidenceCode": "ECO:0000303",
+         "source": "PubMed",
+         "id": "9024663"
+        }
+       ],
+       "value": "C-X3-C motif chemokine 1"
+      }
+     },
+     {
+      "fullName": {
+       "evidences": [
+        {
+         "evidenceCode": "ECO:0000303",
+         "source": "PubMed",
+         "id": "9024663"
+        }
+       ],
+       "value": "CX3C membrane-anchored chemokine"
+      }
+     },
+     {
+      "fullName": {
+       "evidences": [
+        {
+         "evidenceCode": "ECO:0000303",
+         "source": "PubMed",
+         "id": "9177350"
+        }
+       ],
+       "value": "Neurotactin"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Small-inducible cytokine D1"
+      }
+     }
+    ],
+    "contains": [
+     {
+      "recommendedName": {
+       "fullName": {
+        "value": "Processed fractalkine"
+       }
+      }
+     }
+    ],
+    "flag": "Precursor"
+   },
+   "genes": [
+    {
+     "geneName": {
+      "evidences": [
+       {
+        "evidenceCode": "ECO:0000303",
+        "source": "PubMed",
+        "id": "9024663"
+       }
+      ],
+      "value": "CX3CL1"
+     },
+     "synonyms": [
+      {
+       "evidences": [
+        {
+         "evidenceCode": "ECO:0000303",
+         "source": "PubMed",
+         "id": "23125415"
+        }
+       ],
+       "value": "FKN"
+      },
+      {
+       "evidences": [
+        {
+         "evidenceCode": "ECO:0000303",
+         "source": "PubMed",
+         "id": "9177350"
+        }
+       ],
+       "value": "NTT"
+      },
+      {
+       "value": "SCYD1"
+      }
+     ],
+     "orfNames": [
+      {
+       "value": "A-152E5.2"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI0000040685"
+   }
+  },
+  {
+   "entryType": "UniProtKB reviewed (Swiss-Prot)",
+   "primaryAccession": "P50454",
+   "uniProtkbId": "SERPH_HUMAN",
+   "organism": {
+    "scientificName": "Homo sapiens",
+    "commonName": "Human",
+    "taxonId": 9606,
+    "lineage": [
+     "Eukaryota",
+     "Metazoa",
+     "Chordata",
+     "Craniata",
+     "Vertebrata",
+     "Euteleostomi",
+     "Mammalia",
+     "Eutheria",
+     "Euarchontoglires",
+     "Primates",
+     "Haplorrhini",
+     "Catarrhini",
+     "Hominidae",
+     "Homo"
+    ]
+   },
+   "proteinDescription": {
+    "recommendedName": {
+     "fullName": {
+      "value": "Serpin H1"
+     }
+    },
+    "alternativeNames": [
+     {
+      "fullName": {
+       "value": "47 kDa heat shock protein"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Arsenic-transactivated protein 3"
+      },
+      "shortNames": [
+       {
+        "value": "AsTP3"
+       }
+      ]
+     },
+     {
+      "fullName": {
+       "value": "Cell proliferation-inducing gene 14 protein"
+      }
+     },
+     {
+      "fullName": {
+       "value": "Collagen-binding protein"
+      },
+      "shortNames": [
+       {
+        "value": "Colligin"
+       }
+      ]
+     },
+     {
+      "fullName": {
+       "value": "Rheumatoid arthritis-related antigen RA-A47"
+      }
+     }
+    ],
+    "flag": "Precursor"
+   },
+   "genes": [
+    {
+     "geneName": {
+      "value": "SERPINH1"
+     },
+     "synonyms": [
+      {
+       "value": "CBP1"
+      },
+      {
+       "value": "CBP2"
+      },
+      {
+       "value": "HSP47"
+      },
+      {
+       "value": "SERPINH2"
+      }
+     ],
+     "orfNames": [
+      {
+       "value": "PIG14"
+      }
+     ]
+    }
+   ],
+   "extraAttributes": {
+    "uniParcId": "UPI00001271B6"
+   }
+  }
+ ]
+}

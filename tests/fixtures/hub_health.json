@@ -1,0 +1,14 @@
+[
+ {
+  "status": "pass",
+  "service_id": "pdbe",
+  "beacons_api_version": "2.7.0",
+  "output": "Service is healthy!"
+ },
+ {
+  "status": "pass",
+  "service_id": "swissmodel",
+  "beacons_api_version": "2.7.1",
+  "output": null
+ }
+]
