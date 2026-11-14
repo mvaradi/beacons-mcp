@@ -14,11 +14,13 @@ from dataclasses import dataclass
 from typing import Annotated, Any
 
 import httpx
+from mcp import types
+from mcp.server.apps import Apps, ResourceCsp, client_supports_apps
 from mcp.server.mcpserver import Context, MCPServer
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from beacons_mcp import __version__, confirm, hub, uniprot
+from beacons_mcp import __version__, confirm, hub, uniprot, viewer
 from beacons_mcp.clients import make_client
 from beacons_mcp.models import ProteinSearchResult, StructureResult
 from beacons_mcp.registry import Registry
@@ -32,40 +34,142 @@ class AppState:
 
     client: httpx.AsyncClient
     registry: Registry
+    viewer_store: viewer.ViewerStore
 
 
 @asynccontextmanager
 async def lifespan(_server: MCPServer) -> AsyncIterator[AppState]:
     # One HTTP client for the whole server run, closed when the server stops.
     async with make_client() as client:
-        yield AppState(client=client, registry=Registry(client))
+        yield AppState(
+            client=client,
+            registry=Registry(client),
+            viewer_store=viewer.ViewerStore(),
+        )
 
-
-mcp = MCPServer(
-    "beacons-mcp",
-    version=__version__,
-    lifespan=lifespan,
-    instructions=(
-        "Finds 3D structures of proteins through the 3D-Beacons network. "
-        "Typical flow: search_proteins to turn a protein or gene name plus an organism "
-        "into a UniProt accession (confirm the choice with the user if it is ambiguous), "
-        "then find_structures to list structure models for that accession."
-    ),
-)
 
 _READ_ONLY = ToolAnnotations(
     read_only_hint=True, idempotent_hint=True, open_world_hint=True
 )
 
 
-def _tool(func: Callable[..., Any]) -> Callable[..., Any]:
-    """Register ``func`` as a read-only tool, with its docstring as a clean description.
+def _flatten_doc(func: Callable[..., Any]) -> None:
+    """Make the docstring a clean tool description.
 
-    The SDK would send the docstring verbatim, hard line wraps and indentation
-    included. Re-flow each paragraph onto one line so the model sees plain text.
+    The SDK would send it verbatim, hard line wraps and indentation included.
+    Re-flow each paragraph onto one line so the model sees plain text.
     """
     paragraphs = inspect.cleandoc(func.__doc__ or "").split("\n\n")
     func.__doc__ = "\n\n".join(" ".join(p.split()) for p in paragraphs)
+
+
+# The viewer tools use the SDK's public MCP Apps extension: `apps.tool` attaches
+# _meta.ui to a tool and `apps.add_resource` serves the ui:// page. Both must be set
+# up before the server is built, because the server reads the extension then.
+apps = Apps()
+
+
+def _app_tool(**kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def decorate(func: Callable[..., Any]) -> Callable[..., Any]:
+        _flatten_doc(func)
+        return apps.tool(
+            resource_uri=viewer.VIEWER_URI, annotations=_READ_ONLY, **kwargs
+        )(func)
+
+    return decorate
+
+
+apps.add_resource(
+    viewer.ViewerResource(
+        uri=viewer.VIEWER_URI,
+        name="viewer",
+        title="3D structure viewer",
+        description="Interactive 3D viewer (Mol*) for one structure model.",
+        meta={
+            "ui": {
+                # Declared empty on purpose: the page needs no outside website,
+                # because this server downloads the file and hands it over.
+                "csp": ResourceCsp(connect_domains=[], resource_domains=[]).model_dump(
+                    by_alias=True, exclude_none=True
+                )
+            }
+        },
+    )
+)
+
+
+@_app_tool(name="show_structure")
+async def show_structure(
+    uniprot_accession: Annotated[
+        str,
+        Field(
+            description="UniProt accession the model belongs to, e.g. 'P69905'.",
+            examples=["P69905"],
+        ),
+    ],
+    model_id: Annotated[
+        str,
+        Field(
+            description="model_id of one model from find_structures, copied exactly.",
+            examples=["AF-P69905-F1", "2w72"],
+        ),
+    ],
+    *,
+    ctx: Context,
+) -> types.CallToolResult:
+    """Open one model from find_structures in an interactive 3D viewer.
+
+    Call find_structures first and pass a model_id from its results. Chat apps
+    without viewer support get a text summary and the file URL instead.
+    """
+    logger.info("client supports MCP Apps: %s", client_supports_apps(ctx))
+    state = _state(ctx)
+    return await viewer.show_structure(
+        state.client, state.viewer_store, uniprot_accession, model_id
+    )
+
+
+@_app_tool(name="fetch_structure_file", visibility=["app"])
+async def fetch_structure_file(
+    token: Annotated[
+        str,
+        Field(
+            description="Token from show_structure's result. For the viewer, not the model.",
+            examples=["Qm9nLXRva2VuLWV4YW1wbGU"],
+        ),
+    ],
+    chunk: Annotated[
+        int,
+        Field(ge=0, description="Chunk number, starting at 0.", examples=[0]),
+    ] = 0,
+    *,
+    ctx: Context,
+) -> types.CallToolResult:
+    """Return one gzip+base64 chunk of a structure file. Called by the viewer app only."""
+    state = _state(ctx)
+    return await viewer.fetch_structure_file(
+        state.client, state.viewer_store, token, chunk
+    )
+
+
+mcp = MCPServer(
+    "beacons-mcp",
+    version=__version__,
+    lifespan=lifespan,
+    extensions=[apps],
+    instructions=(
+        "Finds 3D structures of proteins through the 3D-Beacons network. "
+        "Typical flow: search_proteins to turn a protein or gene name plus an organism "
+        "into a UniProt accession (confirm the choice with the user if it is ambiguous), "
+        "then find_structures to list structure models for that accession, then "
+        "show_structure to open one model in an interactive 3D viewer."
+    ),
+)
+
+
+def _tool(func: Callable[..., Any]) -> Callable[..., Any]:
+    """Register ``func`` as a read-only tool with a clean description."""
+    _flatten_doc(func)
     return mcp.tool(annotations=_READ_ONLY)(func)
 
 

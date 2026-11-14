@@ -44,3 +44,38 @@ async def test_live_find_structures(client, caplog):
     assert "registry refreshed" in caplog.text
     assert "using the bundled snapshot" not in caplog.text
     assert all(p["description"] for p in data["by_provider"])
+
+
+async def test_live_show_structure_and_fetch_structure_file(client):
+    import base64
+    import gzip
+
+    shown = await client.call_tool(
+        "show_structure", {"uniprot_accession": "P69905", "model_id": "AF-P69905-F1"}
+    )
+
+    assert not shown.is_error, shown.content
+    info = shown.structured_content
+    assert info["model_id"] == "AF-P69905-F1"
+    assert info["file_url"].startswith("https://")
+
+    first = await client.call_tool(
+        "fetch_structure_file", {"token": info["token"], "chunk": 0}
+    )
+    assert not first.is_error, first.content
+    parts = [first.structured_content]
+    for n in range(1, first.structured_content["chunks"]):
+        more = await client.call_tool(
+            "fetch_structure_file", {"token": info["token"], "chunk": n}
+        )
+        parts.append(more.structured_content)
+    text = gzip.decompress(
+        b"".join(base64.b64decode(p["data"]) for p in parts)
+    ).decode()
+
+    assert parts[0]["format"] == "mmcif"
+    assert text.startswith("data_")
+    assert "_atom_site.Cartn_x" in text
+    atoms = [line for line in text.splitlines() if line.startswith("ATOM ")]
+    assert len(atoms) > 500  # a whole hemoglobin alpha chain, not an error page
+    assert parts[0]["decoded_bytes"] == len(text.encode())

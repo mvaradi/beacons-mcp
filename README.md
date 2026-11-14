@@ -14,8 +14,12 @@ providers behind one API.
 |---|---|
 | `search_proteins(query, organism, max_results=5)` | Maps a protein or gene name plus an **organism** to UniProt accessions, using the [UniProt REST API](https://www.uniprot.org/help/api). Gene synonyms match. Reviewed (Swiss-Prot) entries come first. The organism is required and never assumed: the model is told to ask the user. When several proteins match, the user can pick one in a dialog (see below). |
 | `find_structures(uniprot_accession, max_results=10)` | Lists the structure models for an accession from the [3D-Beacons Hub](https://www.ebi.ac.uk/pdbe/pdbe-kb/3dbeacons/api/v2/openapi.json) (OpenAPI spec). Returns totals by provider and category, then a selection of models with residue range, how much of the protein it spans, resolution or confidence, and file URL and format. It returns links; it does not download structures. |
+| `show_structure(uniprot_accession, model_id)` | Opens one model from `find_structures` in an interactive 3D viewer ([Mol*](https://molstar.org)) inside the chat, in apps that support [MCP Apps](https://modelcontextprotocol.io/extensions/apps/overview). Other clients get a text summary and the file URL. See "Viewing a structure in chat" below. |
 
-Both tools are read-only and report failures (no match, unknown accession, a slow or
+A fourth tool, `fetch_structure_file`, exists only for the viewer: it is app-only, so hosts
+keep it from the model.
+
+All tools are read-only and report failures (no match, unknown accession, a slow or
 unavailable service) as tool errors that tell the model what to try next.
 
 ### Example
@@ -64,6 +68,43 @@ Things worth knowing when reading results:
   registry cannot be reached, a bundled snapshot is used instead (and goes stale), and a
   provider it does not know is listed without a description.
 
+### Viewing a structure in chat
+
+`show_structure` re-resolves the model through the Hub (it takes an accession and a
+`model_id`, never a URL) and returns a text summary: provider, model ID, category, residues,
+resolution or confidence, and the file URL. In a chat app that supports MCP Apps, such as
+Claude Desktop, an interactive viewer opens as well, drawn with Mol*. Everywhere else, for
+example the Claude Code terminal, you get the text summary and the file URL.
+
+How it works, and why the viewer needs no outside website:
+
+1. The viewer page is one self-contained HTML file served as an MCP App resource
+   (`ui://beacons/viewer`) with a content security policy that allows no outside
+   connections.
+2. The viewer asks the app-only `fetch_structure_file` tool for the file. The **server**
+   downloads it, so providers that send no CORS headers work too.
+3. The server reads the real format from the file's bytes (the Hub's label and the
+   `Content-Type` are not reliable), compresses it, and sends it as base64 chunks of about
+   96,000 characters, because tool results are limited in size. The viewer reassembles and
+   unpacks it.
+
+The server will only fetch public web addresses: never localhost or private networks, and
+the same holds for redirects. A token from `show_structure` lasts 15 minutes and names one
+Hub-resolved model.
+
+Limits:
+
+- **Size.** Files over 8 MB (unpacked) are refused, with the URL to download from. Change
+  it with `BEACONS_MCP_MAX_FILE_MB`.
+- **Formats.** mmCIF and PDB text only. Anything else gets an error with the file URL.
+- **Ensembles** show the provider's sample file (the first models) and say so; whole
+  ensembles are not rendered.
+- **Colours.** Experimental models are coloured by chain, predicted models by confidence.
+- **Speed.** The page is about 5 MB, so the first draw takes a few seconds to half a minute.
+- **Clients.** Claude Desktop and claude.ai are listed as supporting MCP Apps; Claude Code
+  does not render them and shows the text. Whether your own client renders the viewer is
+  worth checking: see `docs/lab-notebook/`.
+
 ## Development
 
 Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/).
@@ -75,6 +116,9 @@ uv run pytest -m live    # also call the real UniProt and 3D-Beacons services
 uv run ruff check .
 ```
 
+The tests for the viewer build (`tests/test_viewer_build.py`) are skipped until the viewer
+has been built (next section).
+
 The unit tests mock HTTP with [respx](https://lundberg.github.io/respx/) against real
 responses saved in `tests/fixtures/` (see the README there).
 
@@ -84,6 +128,49 @@ Run the server over stdio, or try it in the MCP Inspector:
 uv run beacons-mcp
 uv run mcp dev src/beacons_mcp/server.py
 ```
+
+### Build the viewer
+
+The viewer is a small Node project in `viewer/` (Mol* and the MCP Apps client, bundled by
+Vite into one HTML file). The built page is **not committed**: build it once from a
+checkout, or `show_structure` falls back to text and says so.
+
+```bash
+cd viewer
+npm install
+npm run build    # writes src/beacons_mcp/ui/viewer.html (about 5 MB)
+npm test         # the decoder's unit tests
+```
+
+Needs **Node 22.12 or newer** (Mol* requires 22; Vite requires 20.19+). The build stubs out
+Mol*'s MP4 encoder, which fetches a `data:` URL at start-up that an app sandbox blocks, and
+keeps the third-party licence notices as a comment at the top of the page.
+
+The MCP Inspector can render the viewer for local testing: `uv run mcp dev
+src/beacons_mcp/server.py`, then the **Apps** tab, then `show_structure`.
+
+### Use it in Claude Desktop
+
+Claude Desktop runs local servers from its own config file. That file lives on your machine
+and holds absolute paths, so **it is never committed**. In Claude Desktop open Settings,
+Developer, Edit Config (this creates `claude_desktop_config.json`, on Windows under
+`%APPDATA%\Claude`) and add the server, with the path to your checkout:
+
+```json
+{
+  "mcpServers": {
+    "beacons": {
+      "command": "uv",
+      "args": ["run", "--directory", "C:\\path\\to\\beacons-mcp", "beacons-mcp"]
+    }
+  }
+}
+```
+
+Build the viewer first (above), then restart Claude Desktop, or turn on Developer Mode
+(Help, Troubleshooting) and use Developer, Reload MCP Configuration. Claude asks for
+permission before it shows an app. Then try: "Show me the
+AlphaFold model of human hemoglobin alpha."
 
 ### Use it with Claude Code
 
@@ -95,6 +182,9 @@ it by hand instead:
 ```bash
 claude mcp add --scope project beacons -- uv run beacons-mcp
 ```
+
+Claude Code does not render MCP Apps, so `show_structure` returns the text summary and the
+file URL there.
 
 ## License
 

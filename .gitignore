@@ -13,3 +13,7 @@ __pycache__/
 
 # Per-user Claude Code settings (e.g. which project MCP servers this person approved)
 .claude/settings.local.json
+
+# Viewer (MCP App) build: node_modules and the generated page
+viewer/node_modules/
+src/beacons_mcp/ui/viewer.html

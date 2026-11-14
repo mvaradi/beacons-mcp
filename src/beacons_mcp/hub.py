@@ -131,6 +131,11 @@ def _summarise(raw: dict[str, Any], sequence_length: int | None) -> _Ranked:
     return sort_key, model
 
 
+def model_summary(raw: dict[str, Any], sequence_length: int | None) -> ModelSummary:
+    """One Hub item as find_structures shows it (for other tools describing a model)."""
+    return _summarise(raw, sequence_length)[1]
+
+
 def _select(ranked: list[_Ranked], limit: int) -> list[ModelSummary]:
     """Choose and order the ``limit`` models to show.
 

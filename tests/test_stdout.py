@@ -71,3 +71,62 @@ def test_logging_is_configured_for_stderr_only(restore_logging):
     for handler in handlers:
         assert isinstance(handler, logging.StreamHandler)
         assert handler.stream is sys.stderr
+
+
+@pytest.mark.anyio
+async def test_the_viewer_tools_do_not_write_to_stdout(
+    client, respx_mock, capfd, restore_logging, monkeypatch
+):
+    from beacons_mcp import safe_fetch
+
+    async def resolve(host):
+        return ["93.184.216.34"]
+
+    monkeypatch.setattr(safe_fetch, "_resolve", resolve)
+    configure_logging()
+    file_url = "https://files.example.org/m1.cif"
+    respx_mock.get(f"{HUB_BASE_URL}/uniprot/summary/P69905.json").respond(
+        200,
+        json={
+            "uniprot_entry": {
+                "ac": "P69905",
+                "id": "HBA_HUMAN",
+                "sequence_length": 142,
+            },
+            "structures": [
+                {
+                    "summary": {
+                        "provider": "TestProvider",
+                        "model_identifier": "m1",
+                        "model_category": "AB-INITIO",
+                        "model_url": file_url,
+                        "model_format": "MMCIF",
+                        "uniprot_start": 1,
+                        "uniprot_end": 142,
+                    }
+                }
+            ],
+        },
+    )
+    respx_mock.get(file_url).respond(200, content=b"data_x\n_a 1\n")
+    capfd.readouterr()
+
+    shown = await client.call_tool(
+        "show_structure", {"uniprot_accession": "P69905", "model_id": "m1"}
+    )
+    token = shown.structured_content["token"]
+    fetched = await client.call_tool(
+        "fetch_structure_file", {"token": token, "chunk": 0}
+    )
+    bad_token = await client.call_tool(
+        "fetch_structure_file", {"token": "nope", "chunk": 0}
+    )
+    unknown = await client.call_tool(
+        "show_structure", {"uniprot_accession": "P69905", "model_id": "missing"}
+    )
+
+    assert not shown.is_error and not fetched.is_error  # the happy path ran
+    assert bad_token.is_error and unknown.is_error  # and the error paths log too
+    captured = capfd.readouterr()
+    assert captured.out == ""
+    assert "show_structure" in captured.err

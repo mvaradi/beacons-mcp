@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>3D structure viewer</title>
+  </head>
+  <body>
+    <main>
+      <p id="header" class="header" hidden></p>
+      <div id="viewer" aria-label="Interactive 3D structure"></div>
+      <p id="status" role="status">Waiting for a structure…</p>
+      <p id="error" class="error" role="alert" hidden>
+        <span id="error-text"></span>
+        <button id="open-file" type="button" hidden>Open the file's web address</button>
+      </p>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
