@@ -55,10 +55,10 @@ class ModelSummary(BaseModel):
         )
     )
     residues: str = Field(
-        description="UniProt residue range(s) covered, e.g. '2-142' or '1322-1555, 1618-1700'."
+        description="UniProt residue range the model covers, as the Hub reports it, e.g. '2-142'."
     )
-    coverage_percent: float | None = Field(
-        description="Percent of the protein sequence those residues cover."
+    span_percent: float | None = Field(
+        description="Percent of the protein sequence between the first and last residue of the range."
     )
     resolution_angstrom: float | None = Field(
         description="Resolution in angstroms (experimental models only; lower is better)."
@@ -93,7 +93,7 @@ class StructureResult(BaseModel):
     )
     by_category: dict[str, int] = Field(description="Models per category.")
     models: list[ModelSummary] = Field(
-        description="A selection of models: the best of each provider first."
+        description="A selection of models, most of the protein first (see note)."
     )
     models_not_shown: int = Field(description="Models left out of 'models'.")
     note: str = Field(description="How to read this result.")

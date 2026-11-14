@@ -21,6 +21,7 @@ from pydantic import Field
 from beacons_mcp import __version__, hub, uniprot
 from beacons_mcp.clients import make_client
 from beacons_mcp.models import ProteinSearchResult, StructureResult
+from beacons_mcp.registry import Registry
 
 logger = logging.getLogger("beacons_mcp")
 
@@ -30,13 +31,14 @@ class AppState:
     """What the tools share for the life of the server."""
 
     client: httpx.AsyncClient
+    registry: Registry
 
 
 @asynccontextmanager
 async def lifespan(_server: MCPServer) -> AsyncIterator[AppState]:
     # One HTTP client for the whole server run, closed when the server stops.
     async with make_client() as client:
-        yield AppState(client=client)
+        yield AppState(client=client, registry=Registry(client))
 
 
 mcp = MCPServer(
@@ -67,9 +69,8 @@ def _tool(func: Callable[..., Any]) -> Callable[..., Any]:
     return mcp.tool(annotations=_READ_ONLY)(func)
 
 
-def _client(ctx: Context) -> httpx.AsyncClient:
-    state: AppState = ctx.request_context.lifespan_context
-    return state.client
+def _state(ctx: Context) -> AppState:
+    return ctx.request_context.lifespan_context
 
 
 @_tool
@@ -78,8 +79,8 @@ async def search_proteins(
         str,
         Field(
             description=(
-                "A protein name or gene symbol, e.g. 'hemoglobin alpha' or 'BRCA1'. "
-                "Gene synonyms also match."
+                "Protein name or gene symbol, e.g. 'hemoglobin alpha' or 'BRCA1'. "
+                "Gene synonyms match."
             ),
             examples=["hemoglobin alpha", "BRCA1"],
         ),
@@ -88,9 +89,8 @@ async def search_proteins(
         str,
         Field(
             description=(
-                "The organism the protein is from: a common name, a scientific name or a "
-                "numeric taxon ID, e.g. 'human', 'Homo sapiens' or '9606'. Required: ask the "
-                "user if they have not said."
+                "Common name, scientific name or taxon ID, e.g. 'human', 'Homo sapiens' "
+                "or '9606'. Required: ask the user if they have not said."
             ),
             examples=["human", "Homo sapiens", "9606"],
         ),
@@ -100,27 +100,27 @@ async def search_proteins(
         Field(
             ge=1,
             le=25,
-            description="How many candidates to return (1-25). Example: 5.",
+            description="Candidates to return (1-25).",
             examples=[5],
         ),
     ] = 5,
     *,
     ctx: Context,
 ) -> ProteinSearchResult:
-    """Find the UniProt accession for a protein or gene name in a given organism.
+    """Find the UniProt accession for a protein or gene name in an organism.
 
-    Use this first whenever the user names a protein or gene and you do not already
-    have its UniProt accession. The organism is required. If the user has not named an
-    organism, ask them. Do not assume human.
+    Use first when the user names a protein or gene and you lack its accession. The
+    organism is required. If the user has not named an organism, ask them. Do not
+    assume human.
 
-    Searches gene names (including synonyms) and protein names in UniProtKB and returns
-    ranked candidates, reviewed (Swiss-Prot, curated) entries first. If more than one
-    candidate is plausible, say so and confirm with the user which one they mean before
-    calling find_structures. Unreviewed entries are less reliable and are often fragments
-    or duplicates of a reviewed one. If nothing matches, the call fails with advice on
-    what to try next.
+    Matches gene names (with synonyms) and protein names; reviewed (Swiss-Prot)
+    entries come first. If more than one candidate is plausible, say so and confirm
+    with the user before calling find_structures. Fails with next steps if nothing
+    matches.
     """
-    return await uniprot.search_proteins(_client(ctx), query, organism, max_results)
+    return await uniprot.search_proteins(
+        _state(ctx).client, query, organism, max_results
+    )
 
 
 @_tool
@@ -129,8 +129,7 @@ async def find_structures(
         str,
         Field(
             description=(
-                "A UniProt accession, e.g. 'P69905'. Not a protein name: use "
-                "search_proteins to get the accession from a name."
+                "UniProt accession, e.g. 'P69905'. Not a name: use search_proteins for that."
             ),
             examples=["P69905", "Q92793"],
         ),
@@ -140,34 +139,28 @@ async def find_structures(
         Field(
             ge=1,
             le=50,
-            description="How many models to list in detail (1-50). Example: 10.",
+            description="Models to list (1-50).",
             examples=[10],
         ),
     ] = 10,
     *,
     ctx: Context,
 ) -> StructureResult:
-    """List the 3D structure models of a protein, from every provider in 3D-Beacons.
+    """List 3D structure models (experimental and predicted) for a UniProt accession.
 
-    Takes a UniProt accession. If you only have a name, call search_proteins first.
-    The 3D-Beacons Hub queries all its structure providers, so this can take a few
-    seconds, and popular proteins have hundreds of models.
+    Covers all 3D-Beacons providers. If you only have a name, call search_proteins
+    first. Can take a few seconds.
 
-    Returns the protein, totals of models by provider and by category, and up to
-    max_results models showing the best of each provider first (so the list is a
-    selection, not everything; the number left out is given). Each model has its
-    provider, model ID, category, residue range and the percent of the protein it covers,
-    its resolution (experimental models) or confidence score (predicted models), and the
-    URL and format of its file.
-
-    Categories: 'experimentally determined' models are measured structures (lower
-    resolution values are better); 'template-based' and 'ab-initio' models are
-    predictions (check the confidence score); a 'conformational ensemble' is a set of
-    conformers, and its file URL serves only a sample of it. Models often cover just part
-    of a protein, so check the coverage before presenting one as the whole protein.
-    This tool returns links; it does not download or analyse structure files.
+    Returns totals by provider and category, plus up to max_results models: the
+    experimental model spanning most of the protein first, then others by span,
+    spread across providers. Each gives its residue range, span_percent, resolution
+    (experimental) or confidence (predicted), and file URL and format. Many models
+    cover only part of the protein, so check span_percent before presenting one as
+    the whole protein. Returns links only; nothing is downloaded.
     """
-    return await hub.find_structures(_client(ctx), uniprot_accession, max_results)
+    return await hub.find_structures(
+        _state(ctx).client, _state(ctx).registry, uniprot_accession, max_results
+    )
 
 
 def configure_logging() -> None:

@@ -1,9 +1,10 @@
 """Structure models for a UniProt accession, from the 3D-Beacons Hub."""
 
+import asyncio
 import logging
 import re
 from collections import Counter
-from dataclasses import dataclass, field
+from collections.abc import Mapping
 from typing import Any
 
 import httpx
@@ -22,26 +23,21 @@ ACCESSION_RE = re.compile(
     r"[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2}"
 )
 
-# Experimental evidence first, then ensembles (derived from experiments), then
+EXPERIMENTAL = "experimentally determined"
+
+# How much a category counts when two models span equally much of the protein:
+# experimental evidence first, then ensembles (derived from experiments), then
 # predictions. Categories are the Hub's own strings, lower-cased; an unknown one
 # sorts last.
 _CATEGORY_RANK = {
-    "experimentally determined": 0,
+    EXPERIMENTAL: 0,
     "conformational ensemble": 1,
     "template-based": 2,
     "ab-initio": 3,
 }
 _UNRANKED = 9
 
-_Segment = tuple[int, int]
-
-
-@dataclass
-class _Entry:
-    """One model, with every residue segment the Hub reported for it."""
-
-    raw: dict[str, Any]
-    segments: list[_Segment] = field(default_factory=list)
+_Ranked = tuple[tuple[Any, ...], ModelSummary]
 
 
 def normalise_accession(raw: str) -> str:
@@ -75,33 +71,6 @@ async def fetch_summary(client: httpx.AsyncClient, accession: str) -> dict[str, 
     return response.json()
 
 
-def _merge(segments: list[_Segment]) -> list[_Segment]:
-    merged: list[_Segment] = []
-    for start, end in sorted(segments):
-        if merged and start <= merged[-1][1] + 1:
-            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
-        else:
-            merged.append((start, end))
-    return merged
-
-
-def _group_entries(structures: list[dict[str, Any]]) -> list[_Entry]:
-    """Merge items that are the same model reported once per residue segment."""
-    entries: dict[tuple[Any, ...], _Entry] = {}
-    for item in structures:
-        summary = item["summary"]
-        key = (
-            summary.get("provider"),
-            summary.get("model_identifier"),
-            summary.get("model_url"),
-        )
-        entry = entries.setdefault(key, _Entry(raw=summary))
-        start, end = summary.get("uniprot_start"), summary.get("uniprot_end")
-        if start is not None and end is not None:
-            entry.segments.append((int(start), int(end)))
-    return list(entries.values())
-
-
 def _ensemble_note(conformers: int, file_format: str | None) -> str:
     return (
         f"An ensemble of {conformers} conformers; model_url serves only a sample of it "
@@ -111,30 +80,34 @@ def _ensemble_note(conformers: int, file_format: str | None) -> str:
     )
 
 
-def _summarise(
-    entry: _Entry, sequence_length: int | None
-) -> tuple[tuple[Any, ...], ModelSummary]:
-    raw = entry.raw
-    merged = _merge(entry.segments)
-    covered = sum(end - start + 1 for start, end in merged)
+def _summarise(raw: dict[str, Any], sequence_length: int | None) -> _Ranked:
+    """One Hub item as reported: the Hub's values, plus a derived span percentage."""
+    start, end = raw.get("uniprot_start"), raw.get("uniprot_end")
+    if start is not None and end is not None:
+        residues = f"{start}-{end}"
+        span = (
+            round(100 * min((end - start + 1) / sequence_length, 1.0), 1)
+            if sequence_length
+            else None
+        )
+    else:
+        residues, span = "unknown", None
     # The Hub's own "coverage" field is not used: it disagrees with the residue range
     # for some providers (an ensemble spanning 8% of a protein reports 1.0).
-    percent = (
-        round(100 * min(covered / sequence_length, 1.0), 1) if sequence_length else None
-    )
     conformers = raw.get("number_of_conformers")
     conformers = int(conformers) if conformers is not None else None
     file_format = raw.get("model_format")
     category = (raw.get("model_category") or "unknown").lower()
     resolution = raw.get("resolution")
     confidence = raw.get("confidence_avg_local_score")
+    model_id = str(raw.get("model_identifier", ""))
 
     model = ModelSummary(
         provider=raw.get("provider", "unknown"),
-        model_id=str(raw.get("model_identifier", "")),
+        model_id=model_id,
         category=category,
-        residues=", ".join(f"{start}-{end}" for start, end in merged) or "unknown",
-        coverage_percent=percent,
+        residues=residues,
+        span_percent=span,
         resolution_angstrom=resolution,
         experimental_method=raw.get("experimental_method"),
         confidence_type=raw.get("confidence_type"),
@@ -147,54 +120,71 @@ def _summarise(
         if conformers is not None
         else None,
     )
+    # Most of the protein first. Ties: category, then better resolution or confidence.
     sort_key = (
+        -(span or 0.0),
         _CATEGORY_RANK.get(category, _UNRANKED),
-        -(percent or 0.0),
         resolution if resolution is not None else float("inf"),
         -(confidence or 0.0),
+        model_id,
     )
     return sort_key, model
 
 
-def _select(
-    ranked: list[tuple[tuple[Any, ...], ModelSummary]], limit: int
-) -> list[ModelSummary]:
-    """Pick ``limit`` models: the best of each provider first, then the next best, and so on.
+def _select(ranked: list[_Ranked], limit: int) -> list[ModelSummary]:
+    """Choose and order the ``limit`` models to show.
 
-    A protein can have hundreds of models from one provider; plain ranking would
-    show nothing from the others.
+    1. The experimental model that spans the most of the protein goes first, however
+       small: measured evidence is worth having even when it is one domain.
+    2. The other slots are filled round-robin across providers (each provider's
+       best-spanning model, then each one's next best, and so on), so a provider with
+       hundreds of models cannot crowd out the rest. The pinned model counts as its
+       provider's turn in the round it belongs to.
+    3. After the first, models are listed by how much of the protein they span.
     """
-    by_provider: dict[str, list[tuple[tuple[Any, ...], ModelSummary]]] = {}
-    for item in sorted(ranked, key=lambda pair: pair[0]):
+    ranked = sorted(ranked, key=lambda pair: pair[0])
+    pinned = next((r for r in ranked if r[1].category == EXPERIMENTAL), None)
+    slots = limit - (1 if pinned else 0)
+
+    by_provider: dict[str, list[_Ranked]] = {}
+    for item in ranked:
         by_provider.setdefault(item[1].provider, []).append(item)
-    queues = sorted(by_provider.items(), key=lambda kv: (kv[1][0][0], kv[0]))
+    queues = sorted(by_provider.values(), key=lambda q: (q[0][0], q[0][1].provider))
 
-    chosen: list[ModelSummary] = []
+    picked: list[_Ranked] = []
     depth = 0
-    while len(chosen) < limit and any(len(models) > depth for _, models in queues):
-        for _, models in queues:
-            if depth < len(models) and len(chosen) < limit:
-                chosen.append(models[depth][1])
+    while len(picked) < slots and any(len(q) > depth for q in queues):
+        for queue in queues:
+            if (
+                depth < len(queue)
+                and queue[depth] is not pinned
+                and len(picked) < slots
+            ):
+                picked.append(queue[depth])
         depth += 1
-    return chosen
+    picked.sort(key=lambda pair: pair[0])
+    return [r[1] for r in ([pinned] if pinned else []) + picked]
 
 
-def build_result(summary: dict[str, Any], max_results: int) -> StructureResult:
+def build_result(
+    summary: dict[str, Any], max_results: int, descriptions: Mapping[str, str]
+) -> StructureResult:
     entry = summary.get("uniprot_entry", {})
     length = entry.get("sequence_length")
-    summarised = [
-        _summarise(e, length) for e in _group_entries(summary.get("structures", []))
+    ranked = [
+        _summarise(item["summary"], length) for item in summary.get("structures", [])
     ]
 
-    models = [model for _, model in summarised]
+    models = [model for _, model in ranked]
     providers = Counter(m.provider for m in models)
     categories = Counter(m.category for m in models)
-    shown = _select(summarised, max_results)
+    shown = _select(ranked, max_results)
 
     if models:
         note = (
-            "Totals cover every model found. 'models' shows the best of each provider first, "
-            "so it is a selection, not the full set."
+            "Totals count every model the Hub returned. 'models' is a selection: the "
+            "experimental model spanning most of the protein first, then others by how "
+            "much of the protein they span, spread across providers."
         )
     else:
         note = "The 3D-Beacons network has no structure models for this accession."
@@ -207,7 +197,9 @@ def build_result(summary: dict[str, Any], max_results: int) -> StructureResult:
         total_models=len(models),
         by_provider=[
             ProviderTotal(
-                provider=name, models=count, description=registry.describe(name)
+                provider=name,
+                models=count,
+                description=registry.describe(name, descriptions),
             )
             for name, count in sorted(providers.items(), key=lambda kv: (-kv[1], kv[0]))
         ],
@@ -219,10 +211,20 @@ def build_result(summary: dict[str, Any], max_results: int) -> StructureResult:
 
 
 async def find_structures(
-    client: httpx.AsyncClient, uniprot_accession: str, max_results: int
+    client: httpx.AsyncClient,
+    provider_registry: registry.Registry,
+    uniprot_accession: str,
+    max_results: int,
 ) -> StructureResult:
     accession = normalise_accession(uniprot_accession)
-    summary = await fetch_summary(client, accession)
-    result = build_result(summary, max_results)
+    # Provider descriptions are fetched alongside the (slower) Hub call, so they add no
+    # waiting. They are optional and never raise.
+    descriptions = asyncio.create_task(provider_registry.descriptions())
+    try:
+        summary = await fetch_summary(client, accession)
+    except BaseException:
+        descriptions.cancel()
+        raise
+    result = build_result(summary, max_results, await descriptions)
     logger.info("find_structures %s: %d models", accession, result.total_models)
     return result

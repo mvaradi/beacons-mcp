@@ -13,7 +13,7 @@ providers behind one API.
 | Tool | What it does |
 |---|---|
 | `search_proteins(query, organism, max_results=5)` | Maps a protein or gene name plus an **organism** to UniProt accessions, using the [UniProt REST API](https://www.uniprot.org/help/api). Gene synonyms match. Reviewed (Swiss-Prot) entries come first. The organism is required and never assumed: the model is told to ask the user. |
-| `find_structures(uniprot_accession, max_results=10)` | Lists the structure models for an accession from the [3D-Beacons Hub](https://www.ebi.ac.uk/pdbe/pdbe-kb/3dbeacons/api/v2/openapi.json) (OpenAPI spec). Returns totals by provider and category, then a selection of models showing the best of each provider first, with residue coverage, resolution or confidence, and file URL and format. It returns links; it does not download structures. |
+| `find_structures(uniprot_accession, max_results=10)` | Lists the structure models for an accession from the [3D-Beacons Hub](https://www.ebi.ac.uk/pdbe/pdbe-kb/3dbeacons/api/v2/openapi.json) (OpenAPI spec). Returns totals by provider and category, then a selection of models with residue range, how much of the protein it spans, resolution or confidence, and file URL and format. It returns links; it does not download structures. |
 
 Both tools are read-only and report failures (no match, unknown accession, a slow or
 unavailable service) as tool errors that tell the model what to try next.
@@ -29,13 +29,26 @@ summarises the experimental and predicted models it finds.
 
 Things worth knowing when reading results:
 
-- **Models differ in coverage.** Coverage is computed from the residue ranges the Hub
-  reports, because the Hub's own `coverage` field is not reliable for every provider.
+- **Which models are shown.** A protein can have hundreds. The experimental model that
+  spans the most of the protein comes first, even if it is small, so measured evidence is
+  always represented. The rest are ordered by how much of the protein they span, and the
+  slots are shared round-robin across providers so that one provider with hundreds of
+  models cannot crowd out the others. Totals always cover every model the Hub returned,
+  and the number left out is reported. For a long protein such as CREB-binding protein
+  (Q92793, 2442 residues), whose experimental structures are domains, this puts a
+  full-length prediction ahead of further fragments.
+- **Rows are the Hub's.** Each Hub item is reported as the Hub lists it, so an entry the
+  Hub lists once per residue segment appears once per segment, and totals match the Hub's
+  own counts. `span_percent` is the one derived number: the share of the protein between
+  the first and last residue of the reported range. The Hub's own `coverage` field is not
+  used, because it disagrees with the residue range for some providers.
 - **Conformational ensembles** come with a note: the file URL serves only a sample (the
   first models) of the ensemble, and the format the Hub reports may not match the file.
-- **Provider descriptions** come from a bundled snapshot of the
-  [3D-Beacons registry](https://github.com/3D-Beacons/3d-beacons-registry), so a provider
-  added after the snapshot is listed without a description.
+- **Provider descriptions** are read live from the
+  [3D-Beacons registry](https://github.com/3D-Beacons/3d-beacons-registry), fetched
+  alongside the Hub request, cached for six hours and never allowed to fail a call. If the
+  registry cannot be reached, a bundled snapshot is used instead (and goes stale), and a
+  provider it does not know is listed without a description.
 
 ## Development
 

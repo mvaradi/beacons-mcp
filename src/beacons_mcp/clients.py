@@ -11,6 +11,8 @@ logger = logging.getLogger("beacons_mcp")
 
 UNIPROT_SEARCH_URL = "https://rest.uniprot.org/uniprotkb/search"
 HUB_BASE_URL = "https://www.ebi.ac.uk/pdbe/pdbe-kb/3dbeacons/api/v2"
+# The registry is where 3D-Beacons publishes its providers and their descriptions.
+REGISTRY_URL = "https://raw.githubusercontent.com/3D-Beacons/3d-beacons-registry/HEAD/resources/registry.json"
 
 USER_AGENT = f"beacons-mcp/{__version__}"
 

@@ -33,6 +33,17 @@ async def test_exposes_exactly_the_two_tools(client):
 
 
 @pytest.mark.anyio
+async def test_tool_descriptions_stay_short(client):
+    """The descriptions are sent to the model on every turn: keep them lean."""
+    listed = await client.list_tools()
+    sizes = {t.name: len(t.description) for t in listed.tools}
+
+    assert sizes["search_proteins"] < 600
+    assert sizes["find_structures"] < 750
+    assert sum(sizes.values()) < 1300
+
+
+@pytest.mark.anyio
 async def test_search_proteins_schema(client):
     tool = await get_tool(client, "search_proteins")
 
@@ -73,7 +84,7 @@ async def test_find_structures_schema(client):
 
     assert "Args:" not in tool.description
     assert "search_proteins" in tool.description  # tells the model where names go
-    assert "selection" in flat(tool.description)
+    assert "span_percent" in flat(tool.description)  # tells the model to check coverage
 
     schema = tool.input_schema
     assert schema["required"] == ["uniprot_accession"]

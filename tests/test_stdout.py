@@ -3,7 +3,7 @@ import sys
 
 import pytest
 
-from beacons_mcp.clients import HUB_BASE_URL, UNIPROT_SEARCH_URL
+from beacons_mcp.clients import HUB_BASE_URL, REGISTRY_URL, UNIPROT_SEARCH_URL
 from beacons_mcp.server import configure_logging
 
 
@@ -28,6 +28,9 @@ async def test_no_tool_writes_to_stdout(
         200, json=load_fixture("hub_summary_P69905.json")
     )
     respx_mock.get(f"{HUB_BASE_URL}/uniprot/summary/P99999.json").respond(404, json={})
+    respx_mock.get(REGISTRY_URL).respond(
+        200, json=load_fixture("registry_providers.json")
+    )
     capfd.readouterr()  # drop anything printed while the fixtures were set up
 
     await client.call_tool("search_proteins", {"query": "CBP1", "organism": "human"})
@@ -39,6 +42,25 @@ async def test_no_tool_writes_to_stdout(
     captured = capfd.readouterr()
     assert captured.out == ""
     assert "find_structures" in captured.err  # logging does reach stderr
+
+
+@pytest.mark.anyio
+async def test_registry_fallback_does_not_write_to_stdout(
+    client, respx_mock, load_fixture, capfd, restore_logging
+):
+    configure_logging()
+    respx_mock.get(f"{HUB_BASE_URL}/uniprot/summary/P69905.json").respond(
+        200, json=load_fixture("hub_summary_P69905.json")
+    )
+    respx_mock.get(REGISTRY_URL).respond(503)
+    capfd.readouterr()
+
+    result = await client.call_tool("find_structures", {"uniprot_accession": "P69905"})
+
+    assert not result.is_error
+    captured = capfd.readouterr()
+    assert captured.out == ""
+    assert "registry unavailable" in captured.err  # the fallback is logged, to stderr
 
 
 def test_logging_is_configured_for_stderr_only(restore_logging):
