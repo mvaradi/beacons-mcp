@@ -166,7 +166,8 @@ async def test_dismissing_the_picker_falls_back_to_asking_in_chat(hemoglobin, an
         result.candidates == hemoglobin.candidates
     )  # nothing was decided for the user
     assert result.note == DISMISSED_NOTE
-    assert "Ask them in chat" in result.note
+    assert "interactive question tool" in result.note
+    assert "otherwise ask in chat" in result.note
 
 
 @pytest.mark.anyio

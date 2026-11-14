@@ -2,7 +2,7 @@
 
 If the client can show a form (MCP elicitation), the user chooses from a short list and
 the choice comes back to the model as confirmed. Otherwise, or if the user dismisses
-the form, the result is returned as before and the model is told to ask in chat.
+the form, the result is returned as before and the model is told how to ask.
 """
 
 import logging
@@ -13,16 +13,14 @@ from mcp.server.mcpserver import Context
 from pydantic import Field, create_model
 
 from beacons_mcp.models import ProteinCandidate, ProteinSearchResult
+from beacons_mcp.uniprot import ASK_WHICH_ONE
 
 logger = logging.getLogger("beacons_mcp")
 
 MAX_CHOICES = 5
 MAX_NAME_CHARS = 70
 
-DISMISSED_NOTE = (
-    "The user dismissed the picker without choosing. Ask them in chat which of these "
-    "they mean before calling find_structures."
-)
+DISMISSED_NOTE = f"The user dismissed the picker without choosing. {ASK_WHICH_ONE}"
 
 
 def choices(candidates: list[ProteinCandidate]) -> list[ProteinCandidate]:

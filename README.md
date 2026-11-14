@@ -76,34 +76,46 @@ resolution or confidence, and the file URL. In a chat app that supports MCP Apps
 Claude Desktop, an interactive viewer opens as well, drawn with Mol*. Everywhere else, for
 example the Claude Code terminal, you get the text summary and the file URL.
 
-How it works, and why the viewer needs no outside website:
+How the file reaches the viewer, in this order:
 
-1. The viewer page is one self-contained HTML file served as an MCP App resource
-   (`ui://beacons/viewer`) with a content security policy that allows no outside
-   connections.
-2. The viewer asks the app-only `fetch_structure_file` tool for the file. The **server**
-   downloads it, so providers that send no CORS headers work too.
-3. The server reads the real format from the file's bytes (the Hub's label and the
-   `Content-Type` are not reliable), compresses it, and sends it as base64 chunks of about
-   96,000 characters, because tool results are limited in size. The viewer reassembles and
-   unpacks it.
+1. **The page fetches it from the provider itself.** The viewer's content security policy
+   allows connections to the providers' service hosts and nowhere else. Those hosts come
+   from the [3D-Beacons registry](https://github.com/3D-Beacons/3d-beacons-registry): the
+   bundled snapshot at first, then the live registry once `show_structure` has run, so a
+   provider added later is picked up without a code change. Nothing else is allowed: no
+   outside scripts, styles, images or fonts.
+2. **Otherwise the server fetches it.** If the first attempt fails (the provider sends no
+   CORS headers, or the chat app blocks the connection), the page asks the app-only
+   `fetch_structure_file` tool for the file, in compressed base64 chunks of about 96,000
+   characters because tool results are limited in size. This only works where the chat app
+   lets an app call server tools, which it does not for a local server in the Claude Code
+   tab (it answers "IPC not available for MCP tool call").
+3. **If both fail,** the viewer says why in plain words and offers buttons for the file's
+   web address and the entry page.
 
-The server will only fetch public web addresses: never localhost or private networks, and
-the same holds for redirects. A token from `show_structure` lasts 15 minutes and names one
-Hub-resolved model.
+Either way the file is checked the same way: its real format is read from its bytes (the
+Hub's label and the `Content-Type` are not reliable), gzip is unpacked within the size limit,
+and anything that is not mmCIF or PDB text is refused with the file's address.
+
+The server's own download only reaches public web addresses: never localhost or private
+networks, and the same holds for redirects. A token from `show_structure` lasts 15 minutes
+and names one Hub-resolved model.
 
 Limits:
 
-- **Size.** Files over 8 MB (unpacked) are refused, with the URL to download from. Change
-  it with `BEACONS_MCP_MAX_FILE_MB`.
-- **Formats.** mmCIF and PDB text only. Anything else gets an error with the file URL.
+- **Providers without CORS headers** (three of ten providers in the data I checked: the
+  ones behind the PED ensembles, levylab and Bindome) cannot be loaded by the page itself.
+  They load only through the server route, so in the Code tab they show the links instead.
+- **Size.** Files over 8 MB (unpacked) are refused, with the address to download from.
+  Change it with `BEACONS_MCP_MAX_FILE_MB`.
+- **Formats.** mmCIF and PDB text only.
 - **Ensembles** show the provider's sample file (the first models) and say so; whole
   ensembles are not rendered.
 - **Colours.** Experimental models are coloured by chain, predicted models by confidence.
 - **Speed.** The page is about 5 MB, so the first draw takes a few seconds to half a minute.
-- **Clients.** Claude Desktop and claude.ai are listed as supporting MCP Apps; Claude Code
-  does not render them and shows the text. Whether your own client renders the viewer is
-  worth checking: see `docs/lab-notebook/`.
+- **Clients.** Claude Desktop and claude.ai are listed as supporting MCP Apps. The Claude
+  Code terminal does not render them and shows the text. What your own client does is worth
+  checking: see `docs/lab-notebook/`.
 
 ## Development
 

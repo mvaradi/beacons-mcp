@@ -231,3 +231,137 @@ async def test_a_stale_live_copy_beats_the_snapshot_when_a_refresh_fails(
 
     assert await registry.descriptions() == {"newbeacon": "Live only."}
     assert route.call_count == 2
+
+
+# ---- origins (where the viewer may load model files from) ---------------------------
+
+from beacons_mcp.registry import parse_origins, snapshot_origins
+
+
+def test_origins_are_the_https_service_hosts_sorted_and_unique(load_fixture):
+    registry = load_fixture("registry_providers.json")
+
+    origins = parse_origins(registry)
+
+    assert origins == sorted(set(origins))
+    assert len(origins) == 12  # 13 providers; one is plain http and is left out
+    assert all(o.startswith("https://") for o in origins)
+    assert "http://genome3d.eu" not in origins and "https://genome3d.eu" not in origins
+    assert snapshot_origins() == origins
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://files.example.org/",  # not https
+        "ftp://files.example.org/",
+        "https://localhost/",
+        "https://app.localhost/",
+        "https://printer.local/",
+        "https://db.internal/",
+        "https://127.0.0.1/",
+        "https://10.0.0.5/",
+        "https://[::1]/",
+        "not a url",
+        "",
+        None,
+        42,
+    ],
+)
+def test_origins_that_are_not_public_https_hosts_are_left_out(url):
+    document = {
+        "providers": [
+            {"baseServiceUrl": url},
+            {"baseServiceUrl": "https://ok.example.org/x"},
+        ]
+    }
+
+    assert parse_origins(document) == ["https://ok.example.org"]
+
+
+def test_origins_keep_a_port_but_not_the_default_one_and_drop_paths():
+    document = {
+        "providers": [
+            {"baseServiceUrl": "https://a.example.org:8443/v1/"},
+            {"baseServiceUrl": "https://B.Example.org:443/api"},
+            {"baseServiceUrl": "https://b.example.org/other"},
+        ]
+    }
+
+    assert parse_origins(document) == [
+        "https://a.example.org:8443",
+        "https://b.example.org",
+    ]
+
+
+def test_a_registry_with_no_usable_addresses_is_an_error():
+    with pytest.raises(ValueError):
+        parse_origins(
+            {"providers": [{"baseServiceUrl": "http://only-http.example.org/"}, {}]}
+        )
+
+
+LIVE_BOTH = {
+    "providers": [
+        {
+            "providerId": "newbeacon",
+            "providerDescription": "Live only.",
+            "baseServiceUrl": "https://files.newbeacon.example.org/api/",
+        }
+    ]
+}
+
+
+@pytest.mark.anyio
+async def test_live_origins_are_used(http, respx_mock):
+    respx_mock.get(REGISTRY_URL).respond(200, json=LIVE_BOTH)
+
+    assert await Registry(http).origins() == ["https://files.newbeacon.example.org"]
+
+
+@pytest.mark.anyio
+async def test_descriptions_and_origins_share_one_fetch(http, respx_mock):
+    route = respx_mock.get(REGISTRY_URL).respond(200, json=LIVE_BOTH)
+    registry = Registry(http)
+
+    await registry.descriptions()
+    await registry.origins()
+
+    assert route.call_count == 1
+
+
+@pytest.mark.anyio
+async def test_live_descriptions_survive_when_the_addresses_are_unusable(
+    http, respx_mock
+):
+    """Each part falls back on its own: bad addresses must not discard good descriptions."""
+    document = {
+        "providers": [
+            {
+                "providerId": "x",
+                "providerDescription": "Fine.",
+                "baseServiceUrl": "ftp://nope",
+            }
+        ]
+    }
+    respx_mock.get(REGISTRY_URL).respond(200, json=document)
+    registry = Registry(http)
+
+    assert await registry.descriptions() == {"x": "Fine."}
+    assert await registry.origins() == snapshot_origins()
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("failure", [httpx.ConnectError("down"), 500, "not json", "{}"])
+async def test_origins_fall_back_to_the_snapshot_when_the_registry_fails(
+    http, respx_mock, failure
+):
+    route = respx_mock.get(REGISTRY_URL)
+    if isinstance(failure, int):
+        route.respond(failure)
+    elif isinstance(failure, str):
+        route.respond(200, text=failure)
+    else:
+        route.mock(side_effect=failure)
+
+    assert await Registry(http).origins() == snapshot_origins()

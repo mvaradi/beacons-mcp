@@ -57,7 +57,10 @@ def test_the_apps_extension_is_used_through_its_public_names_only():
     code = (SOURCE / "server.py").read_text(encoding="utf-8")
 
     # The documented entry points: apps.tool, apps.add_resource, ResourceCsp, extensions=[...]
-    assert "from mcp.server.apps import Apps, ResourceCsp, client_supports_apps" in code
+    assert "from mcp.server.apps import Apps, client_supports_apps" in code
+    assert "from mcp.server.apps import APP_MIME_TYPE, ResourceCsp" in (
+        SOURCE / "viewer.py"
+    ).read_text(encoding="utf-8")
     assert "apps.tool(" in code
     assert "apps.add_resource(" in code
     assert "extensions=[apps]" in code

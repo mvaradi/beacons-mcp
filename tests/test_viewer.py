@@ -1,14 +1,19 @@
 import base64
 import gzip
 import os
+import re
+from urllib.parse import urlsplit
 
 import httpx
 import pytest
 from conftest import error_text
+from mcp import Client
 
 from beacons_mcp import safe_fetch, viewer
-from beacons_mcp.clients import HUB_BASE_URL
+from beacons_mcp.clients import HUB_BASE_URL, REGISTRY_URL
 from beacons_mcp.models import ModelSummary
+from beacons_mcp.registry import snapshot_origins
+from beacons_mcp.server import mcp
 from beacons_mcp.structure_file import CHUNK_CHARS
 
 # Routes set up for the happy path may go unused when a call is refused early.
@@ -26,6 +31,14 @@ def public_dns(monkeypatch):
         return ["93.184.216.34"]
 
     monkeypatch.setattr(safe_fetch, "_resolve", resolve)
+
+
+@pytest.fixture(autouse=True)
+def registry_route(respx_mock, load_fixture):
+    """Serve the captured registry as the 'live' one."""
+    return respx_mock.get(REGISTRY_URL).respond(
+        200, json=load_fixture("registry_providers.json")
+    )
 
 
 def hub_url(accession):
@@ -142,7 +155,7 @@ async def test_show_structure_takes_no_url_so_a_url_can_never_be_supplied(client
     assert tool.input_schema["required"] == ["uniprot_accession", "model_id"]
 
 
-async def test_the_viewer_resource_has_the_app_mime_type_and_a_closed_csp(
+async def test_the_viewer_resource_has_the_app_mime_type_and_a_provider_only_csp(
     client, tmp_path, monkeypatch
 ):
     page = tmp_path / "viewer.html"
@@ -154,14 +167,141 @@ async def test_the_viewer_resource_has_the_app_mime_type_and_a_closed_csp(
 
     [resource] = [r for r in listed if str(r.uri) == viewer.VIEWER_URI]
     assert resource.mime_type == "text/html;profile=mcp-app"
-    # Declared empty on purpose: the page needs no outside website.
-    expected = {"ui": {"csp": {"connectDomains": [], "resourceDomains": []}}}
+    # The page may connect to the providers' hosts (from the registry) and nowhere else.
+    expected = {
+        "ui": {"csp": {"connectDomains": snapshot_origins(), "resourceDomains": []}}
+    }
     assert resource.meta == expected
     [content] = read.contents
     assert content.mime_type == "text/html;profile=mcp-app"
     assert content.text == page.read_text(encoding="utf-8")
     assert content.meta == expected
-    assert "frameDomains" not in str(expected) and "baseUriDomains" not in str(expected)
+    csp = content.meta["ui"]["csp"]
+    assert set(csp) == {
+        "connectDomains",
+        "resourceDomains",
+    }  # no frame or base-uri entries
+    assert csp["resourceDomains"] == []  # no outside scripts, styles, images or fonts
+
+
+async def test_the_csp_lists_only_plain_https_provider_hosts(client):
+    [resource] = (await client.list_resources()).resources
+
+    origins = resource.meta["ui"]["csp"]["connectDomains"]
+
+    assert len(origins) >= 10
+    assert origins == sorted(set(origins))
+    for origin in origins:
+        assert re.fullmatch(r"https://[a-z0-9.-]+(:\d+)?", origin), origin
+        assert "*" not in origin
+        assert not re.search(
+            r"localhost|\.local$|\.internal$|//\d+\.\d+\.\d+\.\d+", origin
+        )
+
+
+def test_the_registry_hosts_cover_every_file_host_seen_in_real_hub_data(load_fixture):
+    """If a provider served files from a host the registry does not list, the viewer's
+    CSP would block it. Real Hub data from three proteins says that does not happen."""
+    hosts = {
+        urlsplit(item["summary"]["model_url"]).hostname
+        for name in ("P69905", "Q92793", "P37840")
+        for item in load_fixture(f"hub_summary_{name}.json")["structures"]
+    }
+    allowed = {urlsplit(origin).hostname for origin in snapshot_origins()}
+
+    assert len(hosts) >= 8
+    assert hosts - allowed == set()
+
+
+async def csp_origins(client):
+    [resource] = (await client.list_resources()).resources
+    return resource.meta["ui"]["csp"]["connectDomains"]
+
+
+def live_registry(load_fixture, origin="https://files.new-beacon.example.org/api/"):
+    registry = load_fixture("registry_providers.json")
+    registry["providers"].append(
+        {
+            "providerId": "newbeacon",
+            "providerName": "New Beacon",
+            "providerDescription": "Added after the snapshot.",
+            "providerUrl": "https://new-beacon.example.org/",
+            "baseServiceUrl": origin,
+        }
+    )
+    return registry
+
+
+async def test_showing_a_structure_widens_the_csp_to_the_live_registry(
+    client, respx_mock, load_fixture, registry_route
+):
+    registry_route.respond(200, json=live_registry(load_fixture))
+    mock_hub(respx_mock, [model_item("m1", url=FILE_URL)])
+    assert "https://files.new-beacon.example.org" not in await csp_origins(client)
+
+    result = await show(client)
+
+    assert not result.is_error
+    origins = await csp_origins(client)
+    assert "https://files.new-beacon.example.org" in origins
+    assert set(snapshot_origins()) <= set(origins)  # nothing known was lost
+    assert origins == sorted(set(origins))
+
+
+async def test_the_registry_is_fetched_alongside_the_hub_call_not_at_startup(
+    client, respx_mock, registry_route
+):
+    # Starting the server (the client fixture) made no registry request.
+    assert registry_route.call_count == 0
+    mock_hub(respx_mock, [model_item("m1", url=FILE_URL)])
+
+    await show(client)
+    await show(client)
+
+    assert registry_route.call_count == 1  # fetched once, then cached
+
+
+@pytest.mark.parametrize("failure", [httpx.ConnectError("down"), 503, "not json"])
+async def test_a_failed_registry_leaves_the_snapshot_csp_in_force(
+    client, respx_mock, registry_route, failure
+):
+    if isinstance(failure, int):
+        registry_route.respond(failure)
+    elif isinstance(failure, str):
+        registry_route.respond(200, text=failure)
+    else:
+        registry_route.mock(side_effect=failure)
+    mock_hub(respx_mock, [model_item("m1", url=FILE_URL)])
+
+    result = await show(client)
+
+    assert not result.is_error  # the registry is optional
+    assert await csp_origins(client) == snapshot_origins()
+
+
+async def test_every_server_run_starts_from_the_snapshot_again(
+    respx_mock, load_fixture, registry_route
+):
+    """The CSP widened in one run must not leak into the next."""
+    registry_route.respond(200, json=live_registry(load_fixture))
+    mock_hub(respx_mock, [model_item("m1", url=FILE_URL)])
+
+    async with Client(mcp) as first:
+        await show(first)
+        assert "https://files.new-beacon.example.org" in await csp_origins(first)
+
+    async with Client(mcp) as second:
+        assert await csp_origins(second) == snapshot_origins()
+
+
+async def test_a_refused_request_does_not_touch_the_registry(
+    client, respx_mock, registry_route
+):
+    result = await show(client, "m1", accession="not-an-accession")
+
+    assert result.is_error
+    assert registry_route.call_count == 0
+    assert not respx_mock.calls
 
 
 async def test_a_missing_build_is_reported_with_the_fix(client, tmp_path, monkeypatch):
@@ -191,6 +331,9 @@ async def test_show_structure_returns_a_summary_and_data_for_the_viewer(
     assert data["is_sample"] is False and data["conformers"] is None
     assert data["file_url"] == FILE_URL
     assert data["page_url"] == "https://example.org/entry/m1"
+    # Claude gives the model this data as JSON in place of the text, so it carries the summary.
+    assert data["summary"] == result.content[0].text
+    assert f"File: {FILE_URL}" in data["summary"]
 
 
 async def test_the_text_fallback_is_useful_on_its_own(client, hub_with_model):
@@ -236,9 +379,11 @@ async def test_the_model_is_always_looked_up_again_in_the_hub(
     await show(client)
     await show(client)
 
-    assert (
-        respx_mock.routes[0].call_count == 2
-    )  # nothing about a model is remembered or trusted
+    # Nothing about a model is remembered or trusted: each call asks the Hub again.
+    hub_calls = [
+        c for c in respx_mock.calls if "/uniprot/summary/" in str(c.request.url)
+    ]
+    assert len(hub_calls) == 2
 
 
 async def test_a_text_summary_says_when_the_viewer_is_not_built(

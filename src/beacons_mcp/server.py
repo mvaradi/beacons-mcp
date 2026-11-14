@@ -1,8 +1,8 @@
 """MCP server for the 3D-Beacons protein structure API.
 
-Importing this module has no side effects beyond constructing the server object:
-nothing is started, no connection is made and logging is not configured until
-``main()`` is called.
+Importing this module has no side effects beyond constructing the server object (and
+reading the small bundled registry snapshot): nothing is started, no connection is made
+and logging is not configured until ``main()`` is called.
 """
 
 import inspect
@@ -15,7 +15,7 @@ from typing import Annotated, Any
 
 import httpx
 from mcp import types
-from mcp.server.apps import Apps, ResourceCsp, client_supports_apps
+from mcp.server.apps import Apps, client_supports_apps
 from mcp.server.mcpserver import Context, MCPServer
 from mcp.types import ToolAnnotations
 from pydantic import Field
@@ -41,6 +41,9 @@ class AppState:
 async def lifespan(_server: MCPServer) -> AsyncIterator[AppState]:
     # One HTTP client for the whole server run, closed when the server stops.
     async with make_client() as client:
+        # Each run starts from the bundled snapshot's origins; show_structure widens them to
+        # the live registry's when it first runs.
+        viewer.reset_csp()
         yield AppState(
             client=client,
             registry=Registry(client),
@@ -79,23 +82,7 @@ def _app_tool(**kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any
     return decorate
 
 
-apps.add_resource(
-    viewer.ViewerResource(
-        uri=viewer.VIEWER_URI,
-        name="viewer",
-        title="3D structure viewer",
-        description="Interactive 3D viewer (Mol*) for one structure model.",
-        meta={
-            "ui": {
-                # Declared empty on purpose: the page needs no outside website,
-                # because this server downloads the file and hands it over.
-                "csp": ResourceCsp(connect_domains=[], resource_domains=[]).model_dump(
-                    by_alias=True, exclude_none=True
-                )
-            }
-        },
-    )
-)
+apps.add_resource(viewer.VIEWER_RESOURCE)
 
 
 @_app_tool(name="show_structure")
@@ -125,7 +112,7 @@ async def show_structure(
     logger.info("client supports MCP Apps: %s", client_supports_apps(ctx))
     state = _state(ctx)
     return await viewer.show_structure(
-        state.client, state.viewer_store, uniprot_accession, model_id
+        state.client, state.viewer_store, state.registry, uniprot_accession, model_id
     )
 
 

@@ -83,6 +83,16 @@ def parse_candidate(item: dict[str, Any]) -> ProteinCandidate:
     )
 
 
+# What to do when it is unclear which protein the user means. The model decides how to
+# ask, so say what is best: its interactive question tool (a clickable list) if it has
+# one, plain chat otherwise.
+ASK_WHICH_ONE = (
+    "Ask the user which one they mean before calling find_structures: use your "
+    "interactive question tool if you have one (one option per candidate, showing its "
+    "accession, protein name and gene), otherwise ask in chat."
+)
+
+
 def _next_step_note(candidates: list[ProteinCandidate]) -> str:
     reviewed = [c for c in candidates if c.reviewed]
     if len(reviewed) == 1:
@@ -95,13 +105,12 @@ def _next_step_note(candidates: list[ProteinCandidate]) -> str:
         )
     if reviewed:
         return (
-            f"{len(reviewed)} reviewed entries match, so more than one protein is plausible. "
-            "Tell the user the candidates and confirm which one they mean before calling "
-            "find_structures."
+            f"{len(reviewed)} reviewed entries match, so more than one protein is "
+            f"plausible. {ASK_WHICH_ONE}"
         )
     return (
         "Only unreviewed (TrEMBL) entries match, which are less reliable. "
-        "Tell the user and confirm which one they mean before calling find_structures."
+        f"{ASK_WHICH_ONE}"
     )
 
 

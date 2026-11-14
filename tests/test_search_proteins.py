@@ -103,7 +103,7 @@ async def test_several_reviewed_entries_means_confirm_with_the_user(
 
     data = result.structured_content
     assert len(data["candidates"]) == 3  # max_results caps what is returned
-    assert "confirm" in data["note"]
+    assert "Ask the user which one they mean" in data["note"]
     assert "more than one protein is plausible" in data["note"]
 
 
@@ -133,7 +133,7 @@ async def test_only_unreviewed_entries_are_flagged(client, respx_mock, load_fixt
     result = await search(client, query="CBP1", organism="human")
 
     assert "unreviewed" in result.structured_content["note"]
-    assert "confirm" in result.structured_content["note"]
+    assert "Ask the user which one they mean" in result.structured_content["note"]
 
 
 @pytest.mark.anyio
@@ -195,3 +195,56 @@ async def test_rejected_query_is_reported(client, respx_mock):
     text = error_text(result)
     assert "could not run that search" in text
     assert "bad query" not in text  # the upstream message is not echoed to the model
+
+
+@pytest.mark.anyio
+async def test_ambiguous_names_tell_the_model_to_use_its_selector_when_it_has_one(
+    client, respx_mock, load_fixture
+):
+    """The 'CBP' case: several reviewed proteins, and a client with no dialog of its own.
+
+    The model decides how to ask. The note must name the best way (an interactive
+    question tool: a clickable list) and the fallback (plain chat), and say what each
+    option should show, so it does not just type a paragraph.
+    """
+    mock_search(respx_mock, load_fixture("uniprot_search_cbp1_any_organism.json"))
+
+    result = await search(client, query="CBP", organism="human")
+
+    data = result.structured_content
+    assert data["confirmed_by_user"] is False
+    note = data["note"]
+    assert note.startswith(
+        f"{sum(c['reviewed'] for c in data['candidates'])} reviewed entries match"
+    )
+    assert "interactive question tool" in note
+    assert "one option per candidate" in note
+    assert "accession, protein name and gene" in note
+    assert "otherwise ask in chat" in note
+    assert "before calling find_structures" in note
+
+
+@pytest.mark.anyio
+async def test_a_single_clear_match_does_not_tell_the_model_to_ask(
+    client, respx_mock, load_fixture
+):
+    mock_search(respx_mock, load_fixture("uniprot_search_cbp1_human_gene.json"))
+
+    result = await search(client, query="CBP1", organism="human")
+
+    assert "interactive question tool" not in result.structured_content["note"]
+    assert result.structured_content["note"].startswith("One entry matches")
+
+
+@pytest.mark.anyio
+async def test_only_unreviewed_matches_also_point_at_the_selector(
+    client, respx_mock, load_fixture
+):
+    body = copy.deepcopy(load_fixture("uniprot_search_cbp1_any_organism.json"))
+    for item in body["results"]:
+        item["entryType"] = "UniProtKB unreviewed (TrEMBL)"
+    mock_search(respx_mock, body)
+
+    result = await search(client, query="CBP1", organism="anything")
+
+    assert "interactive question tool" in result.structured_content["note"]

@@ -4,79 +4,92 @@
    "providerId": "swissmodel",
    "providerName": "SWISS-MODEL",
    "providerDescription": "SWISS-MODEL is a fully automated protein structure homology-modelling server, accessible via the ExPASy web server, or from the program DeepView (Swiss Pdb-Viewer). The purpose of this server is to make protein modelling accessible to all life science researchers worldwide.",
-   "providerUrl": "https://swissmodel.expasy.org/"
+   "providerUrl": "https://swissmodel.expasy.org/",
+   "baseServiceUrl": "https://swissmodel.expasy.org/3d-beacons/"
   },
   {
    "providerId": "genome3d",
    "providerName": "Genome-3D",
    "providerDescription": "Genome3D provides consensus structural annotations and 3D models for sequences from model organisms, including human.",
-   "providerUrl": "http://genome3d.eu/"
+   "providerUrl": "http://genome3d.eu/",
+   "baseServiceUrl": "http://genome3d.eu/beacons/"
   },
   {
    "providerId": "pdbe",
    "providerName": "Protein Data Bank in Europe",
    "providerDescription": "PDBe is the European resource for the collection, organisation and dissemination of data on biological macromolecular structures.",
-   "providerUrl": "https://www.ebi.ac.uk/pdbe/"
+   "providerUrl": "https://www.ebi.ac.uk/pdbe/",
+   "baseServiceUrl": "https://www.ebi.ac.uk/pdbe/api/v2/"
   },
   {
    "providerId": "ped",
    "providerName": "Protein Ensemble Database",
    "providerDescription": "The Protein Ensemble Database (PED) is an open access database for the deposition of structural ensembles, mainly intrinsically disordered proteins (IDPs).",
-   "providerUrl": "https://proteinensemble.org/"
+   "providerUrl": "https://proteinensemble.org/",
+   "baseServiceUrl": "https://deposition.proteinensemble.org/v1/3d-beacons/"
   },
   {
    "providerId": "alphafold",
    "providerName": "AlphaFold Protein Structure Database",
    "providerDescription": "AlphaFold is an AI system developed by DeepMind that predicts a protein’s 3D structure from its amino acid sequence. It regularly achieves accuracy competitive with experiment.",
-   "providerUrl": "https://alphafold.ebi.ac.uk/"
+   "providerUrl": "https://alphafold.ebi.ac.uk/",
+   "baseServiceUrl": "https://alphafold.ebi.ac.uk/api/"
   },
   {
    "providerId": "sasbdb",
    "providerName": "Small Angle Scattering Biological Data Bank",
    "providerDescription": "Small angle scattering (SAS) of X-ray and neutrons provides structural information on biological macromolecules in solution at a resolution of 1-2 nm. SASBDB is a fully searchable curated repository of freely accessible and downloadable experimental data, which are deposited together with the relevant experimental conditions, sample details, derived models and their fits to the data.",
-   "providerUrl": "https://www.sasbdb.org/"
+   "providerUrl": "https://www.sasbdb.org/",
+   "baseServiceUrl": "https://www.sasbdb.org/rest-api/"
   },
   {
    "providerId": "alphafill",
    "providerName": "AlphaFill Model Data Bank",
    "providerDescription": "AlphaFill is a databank of AlphaFold models enriched with ligands, cofactors, and ions that are transplanted from homologous experimental structure models.",
-   "providerUrl": "https://alphafill.eu/"
+   "providerUrl": "https://alphafill.eu/",
+   "baseServiceUrl": "https://alphafill.eu/v1/aff/"
   },
   {
    "providerId": "hegelab",
    "providerName": "hegelab.org",
    "providerDescription": "Membrane Protein Research Group, Department of Biophysics and Radiation Biology, Semmelweis University, Budapest, Hungary",
-   "providerUrl": "http://www.hegelab.org/"
+   "providerUrl": "http://www.hegelab.org/",
+   "baseServiceUrl": "https://3dbeacon.hegelab.org/"
   },
   {
    "providerId": "modelarchive",
    "providerName": "ModelArchive",
    "providerDescription": "ModelArchive is the archive for structural models which are not based on experimental data and complements the PDB archive for experimental structures and PDB-Dev for integrative structures.",
-   "providerUrl": "https://modelarchive.org"
+   "providerUrl": "https://modelarchive.org",
+   "baseServiceUrl": "https://modelarchive.org/3d-beacons/"
   },
   {
    "providerId": "isoformio",
    "providerName": "isoform.io",
    "providerDescription": "isoform.io provides open access to predicted 3D structures of protein isoforms derived from the human transcriptome.",
-   "providerUrl": "https://isoform.io/"
+   "providerUrl": "https://isoform.io/",
+   "baseServiceUrl": "https://data.isoform.io/"
   },
   {
    "providerId": "levylab",
    "providerName": "LevyLab",
    "providerDescription": "Dataset of validated homomeric AlphaFold models",
-   "providerUrl": "https://levy.mocel.unige.ch"
+   "providerUrl": "https://levy.mocel.unige.ch",
+   "baseServiceUrl": "https://levy.mocel.unige.ch/hom_atlas/"
   },
   {
    "providerId": "bfvd",
    "providerName": "BFVD",
    "providerDescription": "BFVD is a large repository of predicted viral protein structures",
-   "providerUrl": "https://bfvd.foldseek.com/"
+   "providerUrl": "https://bfvd.foldseek.com/",
+   "baseServiceUrl": "https://bfvd.steineggerlab.workers.dev"
   },
   {
    "providerId": "bindome",
    "providerName": "Bindome",
    "providerDescription": "Database of de novo protein binders",
-   "providerUrl": "https://bindome.epfl.ch/"
+   "providerUrl": "https://bindome.epfl.ch/",
+   "baseServiceUrl": "https://bindome.epfl.ch/"
   }
  ]
 }

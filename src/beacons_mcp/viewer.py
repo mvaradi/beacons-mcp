@@ -13,7 +13,7 @@ import os
 import secrets
 import time
 from collections import OrderedDict
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from importlib import resources
 from pathlib import Path
@@ -21,11 +21,13 @@ from typing import Any
 
 import httpx
 from mcp import types
+from mcp.server.apps import APP_MIME_TYPE, ResourceCsp
 from mcp.server.mcpserver.exceptions import ResourceError, ToolError
 from mcp.server.mcpserver.resources import Resource
 
 from beacons_mcp import hub, safe_fetch, structure_file
 from beacons_mcp.models import ModelSummary
+from beacons_mcp.registry import Registry, snapshot_origins
 
 logger = logging.getLogger("beacons_mcp")
 
@@ -72,6 +74,16 @@ def viewer_available() -> bool:
     return viewer_html_path().is_file()
 
 
+def resource_meta(origins: Sequence[str]) -> dict[str, Any]:
+    """The viewer resource's ``_meta``: it may load files from ``origins`` and nowhere else.
+
+    The origins are the providers' service hosts from the 3D-Beacons registry. Nothing
+    else is allowed: no scripts, styles or other connections from outside the page.
+    """
+    csp = ResourceCsp(connect_domains=list(origins), resource_domains=[])
+    return {"ui": {"csp": csp.model_dump(by_alias=True, exclude_none=True)}}
+
+
 class ViewerResource(Resource):
     """The viewer's HTML, read from disk when the host asks for it (not at import)."""
 
@@ -81,6 +93,30 @@ class ViewerResource(Resource):
             return await asyncio.to_thread(path.read_text, encoding="utf-8")
         except FileNotFoundError:
             raise ResourceError(NOT_BUILT) from None
+
+
+# The page may load a model file from a provider's own host (so the host that runs it, not
+# this server, does the download) and from nowhere else: the allowed origins are the
+# providers' service hosts from the registry. mime_type is given explicitly so that the SDK
+# registers this very object and a later update to its meta is served; a test pins that.
+VIEWER_RESOURCE = ViewerResource(
+    uri=VIEWER_URI,
+    name="viewer",
+    title="3D structure viewer",
+    description="Interactive 3D viewer (Mol*) for one structure model.",
+    mime_type=APP_MIME_TYPE,
+    meta=resource_meta(snapshot_origins()),
+)
+
+
+def reset_csp() -> None:
+    """Allow the bundled snapshot's origins (the start of every server run)."""
+    VIEWER_RESOURCE.meta = resource_meta(snapshot_origins())
+
+
+def allow_origins(origins: Sequence[str]) -> None:
+    """Allow ``origins`` (the live registry's) from now on."""
+    VIEWER_RESOURCE.meta = resource_meta(origins)
 
 
 # ---- tokens ----------------------------------------------------------------------
@@ -191,6 +227,7 @@ def _summary_text(
 async def show_structure(
     client: httpx.AsyncClient,
     store: ViewerStore,
+    registry: Registry,
     uniprot_accession: str,
     model_id: str,
 ) -> types.CallToolResult:
@@ -202,7 +239,15 @@ async def show_structure(
             "shows it, for example 'AF-P69905-F1'."
         )
 
-    summary = await hub.fetch_summary(client, accession)
+    # The registry tells which provider hosts the viewer may load files from. It is fetched
+    # alongside the Hub call (so it adds no waiting) and never raises.
+    origins = asyncio.create_task(registry.origins())
+    try:
+        summary = await hub.fetch_summary(client, accession)
+    except BaseException:
+        origins.cancel()
+        raise
+    allow_origins(await origins)
     raw = _pick_model(summary, accession, model_id)
     entry = summary.get("uniprot_entry", {})
     model = hub.model_summary(raw, entry.get("sequence_length"))
@@ -214,14 +259,13 @@ async def show_structure(
     viewer = viewer_available()
     token = store.issue(model.model_url, model)
     logger.info("show_structure %s %s: viewer built: %s", accession, model_id, viewer)
+    summary = _summary_text(entry.get("id"), accession, model, viewer)
     return types.CallToolResult(
-        content=[
-            types.TextContent(
-                type="text",
-                text=_summary_text(entry.get("id"), accession, model, viewer),
-            )
-        ],
+        content=[types.TextContent(type="text", text=summary)],
         structured_content={
+            # Claude shows the model the structured data as JSON instead of the text
+            # above, so the readable summary is repeated here for it to read.
+            "summary": summary,
             "token": token,
             "accession": accession,
             "model_id": model.model_id,
@@ -233,6 +277,8 @@ async def show_structure(
             "is_sample": model.conformers is not None,
             "file_url": model.model_url,
             "page_url": model.page_url,
+            # The viewer may fetch the file itself, so it needs the limit too.
+            "max_bytes": max_file_bytes(),
         },
     )
 

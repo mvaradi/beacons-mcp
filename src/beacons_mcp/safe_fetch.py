@@ -42,6 +42,21 @@ def _is_public(address: str) -> bool:
     return ip.is_global and not ip.is_multicast
 
 
+def is_public_hostname(host: str) -> bool:
+    """Whether ``host`` could be a public name: not localhost, not a local suffix, not an IP.
+
+    A syntax check only (no DNS). Used where an address will be allowed to be contacted.
+    """
+    host = host.lower().strip(".")
+    if not host or host == "localhost" or host.endswith(_LOCAL_SUFFIXES):
+        return False
+    try:
+        ipaddress.ip_address(host)
+    except ValueError:
+        return True
+    return False
+
+
 async def check_public_url(url: str) -> None:
     """Raise a ToolError unless ``url`` is http(s) and resolves only to public addresses."""
     parts = urlsplit(url)

@@ -64,7 +64,7 @@ async def test_user_declines_the_dialog():
     assert data["confirmed_by_user"] is False
     assert len(data["candidates"]) == 5  # all candidates come back for the chat
     assert "dismissed" in data["note"]
-    assert "Ask them in chat" in data["note"]
+    assert "interactive question tool" in data["note"]
 
 
 async def test_client_without_elicitation_gets_the_chat_fallback():
@@ -72,7 +72,8 @@ async def test_client_without_elicitation_gets_the_chat_fallback():
 
     assert data["confirmed_by_user"] is False
     assert len(data["candidates"]) == 5
-    assert "confirm" in data["note"]
+    assert "interactive question tool" in data["note"]
+    assert "ask in chat" in data["note"]
     assert "dismissed" not in data["note"]
 
 

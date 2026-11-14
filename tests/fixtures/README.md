@@ -16,7 +16,7 @@ services return today.
 | `hub_summary_P37840.json` | `GET {hub}/uniprot/summary/P37840.json` | 320 -> 7 items, keeping three PED ensembles with different conformer counts and coverage; `entities` capped at 3 |
 | `hub_health.json` | `GET {hub}/health/` | none |
 | `hub_openapi_summary_params.json` | `GET {hub}/openapi.json` | only `info`, `servers` and the parameters of the summary endpoint |
-| `registry_providers.json` | `3D-Beacons/3d-beacons-registry`, `resources/registry.json` | providers only; logo and service URLs dropped |
+| `registry_providers.json` | `3D-Beacons/3d-beacons-registry`, `resources/registry.json` | providers only; logos and dev URLs dropped (the service URLs are kept) |
 
 `{hub}` is `https://www.ebi.ac.uk/pdbe/pdbe-kb/3dbeacons/api`.
 
