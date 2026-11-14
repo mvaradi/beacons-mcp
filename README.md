@@ -12,7 +12,7 @@ providers behind one API.
 
 | Tool | What it does |
 |---|---|
-| `search_proteins(query, organism, max_results=5)` | Maps a protein or gene name plus an **organism** to UniProt accessions, using the [UniProt REST API](https://www.uniprot.org/help/api). Gene synonyms match. Reviewed (Swiss-Prot) entries come first. The organism is required and never assumed: the model is told to ask the user. |
+| `search_proteins(query, organism, max_results=5)` | Maps a protein or gene name plus an **organism** to UniProt accessions, using the [UniProt REST API](https://www.uniprot.org/help/api). Gene synonyms match. Reviewed (Swiss-Prot) entries come first. The organism is required and never assumed: the model is told to ask the user. When several proteins match, the user can pick one in a dialog (see below). |
 | `find_structures(uniprot_accession, max_results=10)` | Lists the structure models for an accession from the [3D-Beacons Hub](https://www.ebi.ac.uk/pdbe/pdbe-kb/3dbeacons/api/v2/openapi.json) (OpenAPI spec). Returns totals by provider and category, then a selection of models with residue range, how much of the protein it spans, resolution or confidence, and file URL and format. It returns links; it does not download structures. |
 
 Both tools are read-only and report failures (no match, unknown accession, a slow or
@@ -26,6 +26,20 @@ The model calls `search_proteins("CBP1", "human")`. UniProt matches one reviewed
 **P50454** (Serpin H1), because `CBP1` is a synonym of its gene `SERPINH1`. The model
 confirms that is the protein you meant, then calls `find_structures("P50454")` and
 summarises the experimental and predicted models it finds.
+
+### Picking the right protein
+
+When a search is ambiguous (several reviewed entries, or only unreviewed ones),
+`search_proteins` asks the user to choose, using MCP
+[elicitation](https://modelcontextprotocol.io/specification/latest/client/elicitation): a
+small form with up to five candidates, labelled like
+`P69905 - Hemoglobin subunit alpha (HBA_HUMAN)`. The pick comes back to the model as
+`confirmed_by_user`, so it cannot skip the question or guess. When the list is only part of
+the matches the form says so, and declining it means "none of these".
+
+This needs a client that supports elicitation. Where it does not, or the user declines, the
+tool returns all candidates and tells the model to ask in chat instead. A single clear match
+never opens a dialog. The server logs on stderr whether the client declared support.
 
 Things worth knowing when reading results:
 

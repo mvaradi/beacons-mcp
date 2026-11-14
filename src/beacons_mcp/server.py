@@ -18,7 +18,7 @@ from mcp.server.mcpserver import Context, MCPServer
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from beacons_mcp import __version__, hub, uniprot
+from beacons_mcp import __version__, confirm, hub, uniprot
 from beacons_mcp.clients import make_client
 from beacons_mcp.models import ProteinSearchResult, StructureResult
 from beacons_mcp.registry import Registry
@@ -114,13 +114,15 @@ async def search_proteins(
     assume human.
 
     Matches gene names (with synonyms) and protein names; reviewed (Swiss-Prot)
-    entries come first. If more than one candidate is plausible, say so and confirm
+    entries come first. When several are plausible the user may be shown a picker; if
+    the result has confirmed_by_user, use that protein. Otherwise say so and confirm
     with the user before calling find_structures. Fails with next steps if nothing
     matches.
     """
-    return await uniprot.search_proteins(
+    result = await uniprot.search_proteins(
         _state(ctx).client, query, organism, max_results
     )
+    return await confirm.confirm_candidate(ctx, result)
 
 
 @_tool

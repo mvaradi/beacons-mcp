@@ -60,6 +60,9 @@ async def test_search_proteins_schema(client):
         in tool.description
     )
     assert "reviewed" in tool.description
+    # The model is told what a user-confirmed result means, and the field exists.
+    assert "confirmed_by_user" in tool.description
+    assert "confirmed_by_user" in tool.output_schema["properties"]
 
     schema = tool.input_schema
     assert schema["required"] == ["query", "organism"]

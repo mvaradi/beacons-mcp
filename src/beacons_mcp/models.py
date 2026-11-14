@@ -25,6 +25,13 @@ class ProteinSearchResult(BaseModel):
     total_matches: int | None = Field(
         description="How many entries UniProt matched in all, if it said."
     )
+    confirmed_by_user: bool = Field(
+        default=False,
+        description=(
+            "True when the user picked this protein in a dialog; "
+            "then 'candidates' holds only their choice."
+        ),
+    )
     note: str = Field(description="What to do next with these candidates.")
 
 

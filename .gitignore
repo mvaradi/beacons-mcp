@@ -10,3 +10,6 @@ __pycache__/
 # Local environment / secrets
 .env
 .env.*
+
+# Per-user Claude Code settings (e.g. which project MCP servers this person approved)
+.claude/settings.local.json
