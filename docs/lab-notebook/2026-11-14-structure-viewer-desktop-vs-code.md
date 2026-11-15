@@ -94,9 +94,10 @@ accepted). The server proxy stays as a second route for hosts that run app tool 
 
 Anthropic's docs say `connectDomains` entries must start with `https://`, are applied one by
 one, and that `Access-Control-Allow-Origin: *` suffices for public APIs; they do not say
-whether a local server is treated differently. **That is the open question for the Code
-tab.** If the chat app ignores the declared origins, the viewer will say "The chat app does
-not allow the viewer to connect to <host>" (it listens for the policy-violation event).
+whether a local server is treated differently. **That was the open question for the Code
+tab** (answered in the third attempt below). If the chat app ignored the declared origins, the
+viewer would say "The chat app does not allow the viewer to connect to <host>" (it listens
+for the policy-violation event).
 
 Verified in the MCP Inspector (a host that applies the policy and runs app tool calls):
 
@@ -108,6 +109,28 @@ Verified in the MCP Inspector (a host that applies the policy and runs app tool 
 Also seen in the Code tab: the model asked which protein to use in plain text instead of
 the app's question tool. The server does not control that choice; the note on an ambiguous
 search now tells the model to use an interactive question tool if it has one.
+
+## Third attempt, Code tab, after the changes (2026-11-15; from the user's screenshots)
+
+Prompt: "What 3D structures exist for the human protein CBP?" then "Okay, show me 4n4f".
+
+- **The selector now appeared.** After the note on an ambiguous search was reworded, the model
+  used the app's own question tool ("Needs your input"), with one option per candidate showing
+  accession, protein name and gene (CREBBP, PAG1, CITED1, CITED2, Other). Before the rewording
+  it had typed the question. The model chooses; the server only words the note.
+- **After the pick,** `find_structures` produced a table by provider (211 models) and a list
+  of notable models, with the 15-of-211 selection and its ranking visible in the answer.
+- **The viewer rendered.** "PDBe · 4n4f · experimentally determined · 9.7% of the protein",
+  the structure drawn and coloured by chain. PDBe sends CORS headers, so this was the direct
+  route: **the Code tab applied the declared `connectDomains` for a local server, and the page
+  loaded the file itself.** The server route is still unavailable there ("IPC not available
+  for MCP tool call").
+- The model wrote "I haven't confirmed that the viewer actually rendered on your side". It
+  cannot see the widget, so the text it was given says the viewer opens in supporting apps;
+  that caution is correct.
+
+Not yet tried in the Code tab: a provider without CORS headers (PED, levylab, Bindome), which
+should show the links, because the direct fetch fails and the server route is unavailable.
 
 ## Observations (fill in)
 
@@ -128,12 +151,14 @@ search now tells the model to use an interactive question tool if it has one.
 
 ### Claude Code, desktop app Code tab
 
-- [ ] Rendered, text only, or an error?
-- Notes:
+- [x] Rendered, text only, or an error? Rendered through the direct route (PDBe 4n4f); the
+      server route gives "IPC not available for MCP tool call". See the third attempt above.
+- Notes: not tried with a provider that sends no CORS headers.
 
 ## Result
 
-`<renders in Desktop / falls back in Code / other>`
+Code tab: tools work, the selector appears through the model's question tool, and the viewer
+renders through the direct route. Claude Desktop (chat) and Claude Code (terminal): not tried.
 
 ## Follow-ups
 
