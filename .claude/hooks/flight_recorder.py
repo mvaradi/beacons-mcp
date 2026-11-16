@@ -74,7 +74,8 @@ def log_dir():
 
 def main():
     try:
-        data = json.loads(sys.stdin.read())
+        # Hooks send UTF-8 JSON; the Windows console code page would turn Å into 'Ã…'.
+        data = json.loads(sys.stdin.buffer.read().decode("utf-8"))
         if not isinstance(data, dict):
             raise ValueError("hook input is not a JSON object")
         sid = re.sub(r"[^A-Za-z0-9_.-]", "_", str(data.get("session_id") or "unknown"))

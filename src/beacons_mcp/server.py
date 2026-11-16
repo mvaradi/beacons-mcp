@@ -252,7 +252,7 @@ async def find_structures(
     the whole protein. Returns links only; nothing is downloaded.
     """
     return await hub.find_structures(
-        _state(ctx).client, _state(ctx).registry, uniprot_accession, max_results
+        _state(ctx).client, uniprot_accession, max_results
     )
 
 

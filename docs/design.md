@@ -50,7 +50,9 @@ through and sorts last.
 ## Asking which protein
 
 `search_proteins` needs an organism and never assumes one: the tool description tells the model
-to ask the user.
+to ask the user. The organism is resolved to an NCBI taxonomy ID (`taxonomy.py`,
+`data/organisms.json`) and the search filters on `organism_id`, never on a name: "mouse" is a
+substring of "Mouse-ear cress". An ambiguous or unknown name is an error that says what to do.
 
 When a search is ambiguous (several reviewed entries, or only unreviewed ones), the server
 asks the user to choose, using MCP
@@ -177,6 +179,12 @@ files from the same host as its service, which held for every provider in the da
 that served files from another host would be blocked until its host is listed.
 
 ## Provider descriptions and the registry
+
+`find_structures` no longer returns provider descriptions (about 1.4 kB per result for little
+value); `by_provider` has the name, the count and, for a few providers whose models read
+differently, a one-line `caveat` from `data/provider_caveats.json`. The registry is still
+read for the viewer's allowed origins. What follows describes the registry fetch, which
+used to also supply the descriptions.
 
 Provider descriptions come from the 3D-Beacons registry (`resources/registry.json`), fetched
 alongside the Hub request so that they add no waiting, cached for six hours, and never allowed

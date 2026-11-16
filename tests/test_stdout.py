@@ -55,7 +55,10 @@ async def test_registry_fallback_does_not_write_to_stdout(
     respx_mock.get(REGISTRY_URL).respond(503)
     capfd.readouterr()
 
-    result = await client.call_tool("find_structures", {"uniprot_accession": "P69905"})
+    # show_structure is what reads the registry (for the viewer's allowed origins).
+    result = await client.call_tool(
+        "show_structure", {"uniprot_accession": "P69905", "model_id": "2w72"}
+    )
 
     assert not result.is_error
     captured = capfd.readouterr()

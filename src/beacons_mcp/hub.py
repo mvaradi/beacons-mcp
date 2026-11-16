@@ -1,10 +1,8 @@
 """Structure models for a UniProt accession, from the 3D-Beacons Hub."""
 
-import asyncio
 import logging
 import re
 from collections import Counter
-from collections.abc import Mapping
 from typing import Any
 
 import httpx
@@ -171,9 +169,7 @@ def _select(ranked: list[_Ranked], limit: int) -> list[ModelSummary]:
     return [r[1] for r in ([pinned] if pinned else []) + picked]
 
 
-def build_result(
-    summary: dict[str, Any], max_results: int, descriptions: Mapping[str, str]
-) -> StructureResult:
+def build_result(summary: dict[str, Any], max_results: int) -> StructureResult:
     entry = summary.get("uniprot_entry", {})
     length = entry.get("sequence_length")
     ranked = [
@@ -204,7 +200,7 @@ def build_result(
             ProviderTotal(
                 provider=name,
                 models=count,
-                description=registry.describe(name, descriptions),
+                caveat=registry.caveat(name),
             )
             for name, count in sorted(providers.items(), key=lambda kv: (-kv[1], kv[0]))
         ],
@@ -217,19 +213,11 @@ def build_result(
 
 async def find_structures(
     client: httpx.AsyncClient,
-    provider_registry: registry.Registry,
     uniprot_accession: str,
     max_results: int,
 ) -> StructureResult:
     accession = normalise_accession(uniprot_accession)
-    # Provider descriptions are fetched alongside the (slower) Hub call, so they add no
-    # waiting. They are optional and never raise.
-    descriptions = asyncio.create_task(provider_registry.descriptions())
-    try:
-        summary = await fetch_summary(client, accession)
-    except BaseException:
-        descriptions.cancel()
-        raise
-    result = build_result(summary, max_results, await descriptions)
+    summary = await fetch_summary(client, accession)
+    result = build_result(summary, max_results)
     logger.info("find_structures %s: %d models", accession, result.total_models)
     return result

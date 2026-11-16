@@ -40,10 +40,7 @@ async def test_live_find_structures(client, caplog):
     assert any(m["span_percent"] == 100.0 for m in models[1:])
     spans = [m["span_percent"] for m in models[1:]]
     assert spans == sorted(spans, reverse=True)
-    # The provider descriptions came from the live registry, not the bundled snapshot.
-    assert "registry refreshed" in caplog.text
-    assert "using the bundled snapshot" not in caplog.text
-    assert all(p["description"] for p in data["by_provider"])
+    assert all("description" not in p for p in data["by_provider"])
 
 
 async def test_live_show_structure_and_fetch_structure_file(client):

@@ -1,3 +1,4 @@
+import json
 import re
 from collections import Counter
 from pathlib import Path
@@ -6,20 +7,9 @@ import httpx
 import pytest
 from conftest import error_text
 
-from beacons_mcp.clients import HUB_BASE_URL, REGISTRY_URL, USER_AGENT
-from beacons_mcp.registry import MAX_DESCRIPTION_CHARS
+from beacons_mcp.clients import HUB_BASE_URL, USER_AGENT
 
-# The provider-description fetch runs alongside the Hub call, and is cancelled when
-# the Hub call fails first, so its route is not always used.
-pytestmark = pytest.mark.respx(assert_all_called=False)
-
-
-@pytest.fixture(autouse=True)
-def registry_route(respx_mock, load_fixture):
-    """Serve the captured registry as the 'live' one."""
-    return respx_mock.get(REGISTRY_URL).respond(
-        200, json=load_fixture("registry_providers.json")
-    )
+MAX_CAVEAT_CHARS = 100
 
 
 def hub_url(accession):
@@ -318,64 +308,50 @@ async def test_ensemble_is_flagged_as_a_sample_with_a_format_caveat(
 
 
 @pytest.mark.anyio
-async def test_providers_are_described_from_the_live_registry(
-    client, respx_mock, load_fixture, registry_route
-):
+async def test_by_provider_has_no_long_descriptions(client, respx_mock, load_fixture):
+    """Regression: every result used to carry a sentence per provider (about 1.4 kB)."""
     mock_hub(respx_mock, load_fixture, "P69905")
-    live = load_fixture("registry_providers.json")
-    for provider in live["providers"]:
-        if provider["providerId"] == "levylab":
-            provider["providerDescription"] = (
-                "A description only the live registry has. More."
-            )
-    registry_route.respond(200, json=live)
 
     result = await find(client, "P69905")
 
-    totals = {t["provider"]: t for t in result.structured_content["by_provider"]}
-    assert (
-        totals["levylab"]["description"] == "A description only the live registry has."
-    )
-    for total in totals.values():
-        assert total["description"], f"no description for {total['provider']}"
-        assert len(total["description"]) <= MAX_DESCRIPTION_CHARS
-
-
-@pytest.mark.anyio
-@pytest.mark.parametrize(
-    "failure",
-    [httpx.ReadTimeout("slow"), httpx.ConnectError("down"), 404, 500, "not json"],
-    ids=["timeout", "connection-error", "http-404", "http-500", "bad-body"],
-)
-async def test_registry_trouble_never_fails_the_tool(
-    client, respx_mock, load_fixture, registry_route, failure
-):
-    mock_hub(respx_mock, load_fixture, "P69905")
-    if isinstance(failure, int):
-        registry_route.respond(failure)
-    elif isinstance(failure, str):
-        registry_route.respond(200, text=failure)
-    else:
-        registry_route.mock(side_effect=failure)
-
-    result = await find(client, "P69905")
-
-    assert not result.is_error
-    # The bundled snapshot stands in, so the descriptions are still there.
     totals = result.structured_content["by_provider"]
-    assert all(t["description"] for t in totals)
+    assert totals
+    for total in totals:
+        assert set(total) == {"provider", "models", "caveat"}
+        assert total["caveat"] is None or len(total["caveat"]) <= MAX_CAVEAT_CHARS
+    assert len(json.dumps(totals)) < 600  # was 1383 chars with descriptions
 
 
 @pytest.mark.anyio
-async def test_registry_is_fetched_once_per_server_run(
-    client, respx_mock, load_fixture, registry_route
-):
-    mock_hub(respx_mock, load_fixture, "P69905")
+async def test_only_providers_whose_models_need_it_get_a_caveat(client, respx_mock):
+    mock_items(
+        respx_mock,
+        [
+            item("a", "EXPERIMENTALLY DETERMINED", 1, 100, provider="PDBe"),
+            item("b", "CONFORMATIONAL ENSEMBLE", 1, 100, provider="PED"),
+            item("c", "AB-INITIO", 1, 100, provider="Bindome"),
+            item("d", "AB-INITIO", 1, 100, provider="SomeNewProvider"),
+        ],
+    )
+
+    result = await find(client, "P69905")
+
+    caveats = {t["provider"]: t["caveat"] for t in result.structured_content["by_provider"]}
+    assert caveats["PDBe"] is None
+    assert caveats["SomeNewProvider"] is None
+    assert "nsembles" in caveats["PED"]
+    assert "esigned" in caveats["Bindome"]
+
+
+@pytest.mark.anyio
+async def test_find_structures_does_not_call_the_registry(client, respx_mock, load_fixture):
+    route = mock_hub(respx_mock, load_fixture, "P69905")
 
     await find(client, "P69905")
-    await find(client, "P69905")
 
-    assert registry_route.call_count == 1
+    assert [c.request.url.host for c in respx_mock.calls] == [
+        route.calls.last.request.url.host
+    ]
 
 
 @pytest.mark.anyio
@@ -489,8 +465,8 @@ async def test_unknown_category_and_provider_are_passed_through(client, respx_mo
     # An unknown category sorts after the known ones when the span is the same.
     assert [m["model_id"] for m in data["models"]] == ["b", "a"]
     assert data["by_category"] == {"brand new kind": 1, "ab-initio": 1}
-    # A provider the registry does not know just has no description.
-    assert data["by_provider"][0]["description"] is None
+    # A provider with no caveat on file just has none.
+    assert data["by_provider"][0]["caveat"] is None
 
 
 def test_source_code_names_no_provider():

@@ -66,3 +66,17 @@ def test_timeline_on_fixture():
     for line in ("model requests: 2", "batches: 1", "tool calls: 2", "failures: 1",
                  "chars returned to the model (per PostToolBatch): 1220"):
         assert line in out
+
+
+def test_non_ascii_is_read_and_written_as_utf8(tmp_path):
+    """Regression: with a non-UTF-8 default encoding (Windows) 'Å' was logged as 'Ã…'."""
+    env = dict(os.environ, FLIGHT_RECORDER_LOG_DIR=str(tmp_path), PYTHONUTF8="0",
+               PYTHONIOENCODING="cp1252")
+    payload = json.dumps({"session_id": "u", "hook_event_name": "UserPromptSubmit",
+                          "prompt": "resolution 1.55 Å"}, ensure_ascii=False)
+    r = subprocess.run([sys.executable, str(HOOK)], input=payload.encode("utf-8"),
+                       capture_output=True, env=env, timeout=10)
+    assert r.returncode == 0 and r.stderr == b""
+    raw = (tmp_path / "flight-u.jsonl").read_bytes()
+    assert "1.55 Å".encode("utf-8") in raw
+    assert "Ã…".encode("utf-8") not in raw

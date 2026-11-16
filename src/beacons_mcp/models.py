@@ -46,8 +46,9 @@ class ProteinInfo(BaseModel):
 class ProviderTotal(BaseModel):
     provider: str = Field(description="Provider name as the Hub reports it.")
     models: int = Field(description="Number of models from this provider.")
-    description: str | None = Field(
-        description="One-sentence description of the provider, when known."
+    caveat: str | None = Field(
+        default=None,
+        description="Short note on how to read this provider's models, only where it matters.",
     )
 
 

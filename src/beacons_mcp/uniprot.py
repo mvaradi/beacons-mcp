@@ -6,6 +6,7 @@ from typing import Any
 import httpx
 from mcp.server.mcpserver.exceptions import ToolError
 
+from beacons_mcp import taxonomy
 from beacons_mcp.clients import UNIPROT_SEARCH_URL, get
 from beacons_mcp.models import ProteinCandidate, ProteinSearchResult
 
@@ -25,24 +26,14 @@ def _clean(text: str) -> str:
     return " ".join(text.replace('"', " ").replace("\\", " ").split())
 
 
-def build_query(query: str, organism: str) -> str:
-    """Build the UniProt query: gene names (with synonyms) or protein names, in an organism."""
+def build_query(query: str, taxon_id: int) -> str:
+    """Build the UniProt query: gene names (with synonyms) or protein names, in a taxon."""
     name = _clean(query)
     if not name:
         raise ToolError(
             "query is empty. Provide a protein or gene name such as 'hemoglobin alpha' or 'BRCA1'."
         )
-    organism = organism.strip()
-    if not organism:
-        raise ToolError(
-            "organism is required. Ask the user which organism they mean "
-            "(for example 'human', 'mouse' or a taxon ID like 9606); do not assume human."
-        )
-    if organism.isdigit():
-        organism_clause = f"organism_id:{organism}"
-    else:
-        organism_clause = f'organism_name:"{_clean(organism)}"'
-    return f'(gene:"{name}" OR protein_name:"{name}") AND {organism_clause}'
+    return f'(gene:"{name}" OR protein_name:"{name}") AND organism_id:{taxon_id}'
 
 
 def _protein_name(item: dict[str, Any]) -> str | None:
@@ -117,7 +108,8 @@ def _next_step_note(candidates: list[ProteinCandidate]) -> str:
 async def search_proteins(
     client: httpx.AsyncClient, query: str, organism: str, max_results: int
 ) -> ProteinSearchResult:
-    uniprot_query = build_query(query, organism)
+    wanted = taxonomy.resolve(organism)
+    uniprot_query = build_query(query, wanted.taxon_id)
     size = min(max(max_results * FETCH_FACTOR, MIN_FETCH), MAX_FETCH)
     response = await get(
         client,
@@ -136,7 +128,13 @@ async def search_proteins(
             "UniProt could not run that search. Try a simpler name without special characters."
         )
 
-    results = response.json().get("results", [])
+    # organism_id is exact, so this only guards against a surprise from UniProt: an entry
+    # of any other taxon is never offered as a candidate.
+    results = [
+        item
+        for item in response.json().get("results", [])
+        if item.get("organism", {}).get("taxonId", wanted.taxon_id) == wanted.taxon_id
+    ]
     if not results:
         raise ToolError(
             f"No UniProt entry matches '{query.strip()}' in '{organism.strip()}'. "
@@ -154,7 +152,7 @@ async def search_proteins(
     logger.info("search_proteins matched %s entries", total or len(results))
     return ProteinSearchResult(
         query=query.strip(),
-        organism=organism.strip(),
+        organism=f"{wanted.name} (taxon {wanted.taxon_id})",
         candidates=candidates,
         total_matches=int(total) if total and total.isdigit() else None,
         note=_next_step_note(candidates),

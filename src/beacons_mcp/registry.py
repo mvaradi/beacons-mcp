@@ -177,3 +177,20 @@ def describe(provider: str, descriptions: Mapping[str, str]) -> str | None:
     if not matches:
         return None
     return first_sentence(descriptions[max(matches, key=len)])
+
+
+@cache
+def _caveats() -> dict[str, str]:
+    text = (resources.files("beacons_mcp") / "data" / "provider_caveats.json").read_text(
+        encoding="utf-8"
+    )
+    return {_normalise(k): v for k, v in json.loads(text).items()}
+
+
+def caveat(provider: str) -> str | None:
+    """A short note on how to read ``provider``'s models, if one changes the reading.
+
+    Only a few providers need one (designed binders, ensembles, transplanted ligands);
+    the notes are data in ``data/provider_caveats.json``, matched on the whole name.
+    """
+    return _caveats().get(_normalise(provider))

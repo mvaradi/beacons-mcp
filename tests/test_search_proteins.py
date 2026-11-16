@@ -11,6 +11,14 @@ async def search(client, **arguments):
     return await client.call_tool("search_proteins", arguments)
 
 
+def all_human(body):
+    """The mixed-organism fixture, with every entry made human (the search is by taxon)."""
+    body = copy.deepcopy(body)
+    for item in body["results"]:
+        item["organism"]["taxonId"] = 9606
+    return body
+
+
 def mock_search(respx_mock, body, *, total=None, status=200):
     headers = {"x-total-results": str(total)} if total is not None else {}
     return respx_mock.get(UNIPROT_SEARCH_URL).respond(
@@ -48,7 +56,8 @@ async def test_name_in_organism_maps_to_ranked_candidate(
     query = sent.url.params["query"]
     assert 'gene:"CBP1"' in query
     assert 'protein_name:"CBP1"' in query
-    assert 'organism_name:"human"' in query
+    assert "organism_id:9606" in query
+    assert "organism_name" not in query
     assert sent.url.params["format"] == "json"
     assert (
         sent.url.params["fields"]
@@ -67,26 +76,91 @@ async def test_numeric_organism_is_sent_as_taxon_id(client, respx_mock, load_fix
 
 
 @pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("name", "taxon"),
+    [("human", 9606), ("Homo sapiens", 9606), ("Mouse", 10090), ("Mus musculus", 10090),
+     ("Homo sapiens (Human)", 9606), ("mouse-ear cress", 3702)],
+)
+async def test_names_resolve_to_taxon_ids(client, respx_mock, load_fixture, name, taxon):
+    route = mock_search(respx_mock, all_human(load_fixture("uniprot_search_cbp1_human_gene.json")))
+
+    await search(client, query="CBP1", organism=name)
+
+    assert f"organism_id:{taxon}" in route.calls.last.request.url.params["query"]
+
+
+@pytest.mark.anyio
+async def test_mouse_never_matches_mouse_ear_cress(client, respx_mock, load_fixture):
+    """Regression: 'mouse' used to be sent as organism_name:"mouse", which also matches
+    Arabidopsis ("Mouse-ear cress"). p53 + mouse must return Mus musculus only."""
+    body = copy.deepcopy(load_fixture("uniprot_search_cbp1_any_organism.json"))
+    mouse, plant = body["results"][0], copy.deepcopy(body["results"][0])
+    mouse["organism"] = {"scientificName": "Mus musculus", "commonName": "Mouse", "taxonId": 10090}
+    plant["primaryAccession"] = "Q42578"
+    plant["organism"] = {
+        "scientificName": "Arabidopsis thaliana", "commonName": "Mouse-ear cress", "taxonId": 3702,
+    }
+    body["results"] = [plant, mouse]  # even if UniProt returned the plant, it is dropped
+    route = mock_search(respx_mock, body)
+
+    result = await search(client, query="p53", organism="mouse")
+
+    assert not result.is_error
+    query = route.calls.last.request.url.params["query"]
+    assert "organism_id:10090" in query and "organism_name" not in query
+    organisms = [c["organism"] for c in result.structured_content["candidates"]]
+    assert organisms == ["Mus musculus (Mouse)"]
+    assert result.structured_content["organism"] == "Mus musculus (taxon 10090)"
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("organism", ["yeast", "frog"])
+async def test_ambiguous_organism_is_an_actionable_error(client, respx_mock, organism):
+    result = await search(client, query="p53", organism=organism)
+
+    text = error_text(result)
+    assert "ambiguous" in text and "Ask the user" in text and "taxon" in text
+    assert not respx_mock.calls
+
+
+@pytest.mark.anyio
+async def test_unknown_organism_is_an_actionable_error(client, respx_mock):
+    result = await search(client, query="p53", organism="unicorn")
+
+    text = error_text(result)
+    assert "Unknown organism 'unicorn'" in text
+    assert "taxon ID" in text
+    assert not respx_mock.calls
+
+
+@pytest.mark.anyio
+async def test_unlisted_taxon_id_is_passed_through(client, respx_mock, load_fixture):
+    route = mock_search(respx_mock, {"results": []})
+
+    await search(client, query="p53", organism="9999999")
+
+    assert "organism_id:9999999" in route.calls.last.request.url.params["query"]
+
+
+@pytest.mark.anyio
 async def test_quotes_in_the_query_cannot_break_the_uniprot_query(
     client, respx_mock, load_fixture
 ):
     route = mock_search(respx_mock, load_fixture("uniprot_search_cbp1_human_gene.json"))
 
-    await search(client, query='he"llo\\ world', organism='hu"man')
+    await search(client, query=r'he"llo\ world', organism="human")
 
-    query = route.calls.last.request.url.params["query"]
-    assert 'gene:"he llo world"' in query
-    assert 'organism_name:"hu man"' in query
+    assert 'gene:"he llo world"' in route.calls.last.request.url.params["query"]
 
 
 @pytest.mark.anyio
 async def test_reviewed_entries_come_first(client, respx_mock, load_fixture):
-    body = copy.deepcopy(load_fixture("uniprot_search_cbp1_any_organism.json"))
+    body = all_human(load_fixture("uniprot_search_cbp1_any_organism.json"))
     body["results"][0]["entryType"] = "UniProtKB unreviewed (TrEMBL)"
     first_accession = body["results"][0]["primaryAccession"]
     mock_search(respx_mock, body)
 
-    result = await search(client, query="CBP1", organism="anything", max_results=25)
+    result = await search(client, query="CBP1", organism="human", max_results=25)
 
     flags = [c["reviewed"] for c in result.structured_content["candidates"]]
     assert flags == sorted(flags, reverse=True)  # all True first, then False
@@ -97,9 +171,9 @@ async def test_reviewed_entries_come_first(client, respx_mock, load_fixture):
 async def test_several_reviewed_entries_means_confirm_with_the_user(
     client, respx_mock, load_fixture
 ):
-    mock_search(respx_mock, load_fixture("uniprot_search_cbp1_any_organism.json"))
+    mock_search(respx_mock, all_human(load_fixture("uniprot_search_cbp1_any_organism.json")))
 
-    result = await search(client, query="CBP1", organism="anything", max_results=3)
+    result = await search(client, query="CBP1", organism="human", max_results=3)
 
     data = result.structured_content
     assert len(data["candidates"]) == 3  # max_results caps what is returned
@@ -111,13 +185,13 @@ async def test_several_reviewed_entries_means_confirm_with_the_user(
 async def test_one_reviewed_entry_among_unreviewed_ones(
     client, respx_mock, load_fixture
 ):
-    body = copy.deepcopy(load_fixture("uniprot_search_cbp1_any_organism.json"))
+    body = all_human(load_fixture("uniprot_search_cbp1_any_organism.json"))
     body["results"] = body["results"][:3]
     for item in body["results"][1:]:
         item["entryType"] = "UniProtKB unreviewed (TrEMBL)"
     mock_search(respx_mock, body)
 
-    result = await search(client, query="CBP1", organism="anything")
+    result = await search(client, query="CBP1", organism="human")
 
     note = result.structured_content["note"]
     assert note.startswith("One reviewed entry matches")
@@ -207,7 +281,7 @@ async def test_ambiguous_names_tell_the_model_to_use_its_selector_when_it_has_on
     question tool: a clickable list) and the fallback (plain chat), and say what each
     option should show, so it does not just type a paragraph.
     """
-    mock_search(respx_mock, load_fixture("uniprot_search_cbp1_any_organism.json"))
+    mock_search(respx_mock, all_human(load_fixture("uniprot_search_cbp1_any_organism.json")))
 
     result = await search(client, query="CBP", organism="human")
 
@@ -240,11 +314,11 @@ async def test_a_single_clear_match_does_not_tell_the_model_to_ask(
 async def test_only_unreviewed_matches_also_point_at_the_selector(
     client, respx_mock, load_fixture
 ):
-    body = copy.deepcopy(load_fixture("uniprot_search_cbp1_any_organism.json"))
+    body = all_human(load_fixture("uniprot_search_cbp1_any_organism.json"))
     for item in body["results"]:
         item["entryType"] = "UniProtKB unreviewed (TrEMBL)"
     mock_search(respx_mock, body)
 
-    result = await search(client, query="CBP1", organism="anything")
+    result = await search(client, query="CBP1", organism="human")
 
     assert "interactive question tool" in result.structured_content["note"]

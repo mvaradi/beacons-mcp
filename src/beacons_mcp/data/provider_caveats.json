@@ -1,0 +1,5 @@
+{
+  "ped": "Ensembles of conformers, not single structures.",
+  "bindome": "Designed binders, not natural proteins.",
+  "alphafill": "AlphaFold models with ligands copied from homologs."
+}

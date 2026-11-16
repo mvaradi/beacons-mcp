@@ -117,8 +117,9 @@ Each is explained in [`docs/design.md`](docs/design.md).
   [Why](docs/design.md#asking-which-protein)
 - **Rank by span, experimental first, spread across providers,** and report each Hub item as
   the Hub lists it. [Why](docs/design.md#choosing-which-models-to-show)
-- **Providers are data, not code.** Descriptions and the viewer's allowed hosts come from the
-  3D-Beacons registry, live with a bundled fallback; no provider name appears in the source.
+- **Providers are data, not code.** The viewer's allowed hosts come from the 3D-Beacons
+  registry, live with a bundled fallback, and the few short provider caveats (designed binders,
+  ensembles) are in a data file; no provider name appears in the source.
   [Why](docs/design.md#provider-descriptions-and-the-registry)
 - **The file does not pass through the model.** The viewer page fetches it from the provider,
   with the server as a second route. [Why](docs/design.md#how-a-structure-reaches-the-viewer)
