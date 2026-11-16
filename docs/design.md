@@ -52,7 +52,12 @@ through and sorts last.
 `search_proteins` needs an organism and never assumes one: the tool description tells the model
 to ask the user. The organism is resolved to an NCBI taxonomy ID (`taxonomy.py`,
 `data/organisms.json`) and the search filters on `organism_id`, never on a name: "mouse" is a
-substring of "Mouse-ear cress". An ambiguous or unknown name is an error that says what to do.
+substring of "Mouse-ear cress". Names not in that file are looked up in the UniProt taxonomy
+search and accepted only on one exact scientific- or common-name match at species rank or
+below; zero or several matches are an error that lists the options. "any" is an error too: the
+organism is never assumed. The result reports what was searched, e.g.
+`mouse → Mus musculus (taxon 10090)`. The filter is exact (`organism_id`), so a species-level ID
+does not include entries filed under its strains.
 
 When a search is ambiguous (several reviewed entries, or only unreviewed ones), the server
 asks the user to choose, using MCP
@@ -180,23 +185,16 @@ that served files from another host would be blocked until its host is listed.
 
 ## Provider descriptions and the registry
 
-`find_structures` no longer returns provider descriptions (about 1.4 kB per result for little
-value); `by_provider` has the name, the count and, for a few providers whose models read
-differently, a one-line `caveat` from `data/provider_caveats.json`. The registry is still
-read for the viewer's allowed origins. What follows describes the registry fetch, which
-used to also supply the descriptions.
+`find_structures` returns no provider descriptions (they were about 1.4 kB per result for
+little value); `by_provider` has the name, the count and, for a few providers whose models read
+differently, a one-line `caveat` from `data/provider_caveats.json`.
 
-Provider descriptions come from the 3D-Beacons registry (`resources/registry.json`), fetched
-alongside the Hub request so that they add no waiting, cached for six hours, and never allowed
-to fail a call. The fetch times out after five seconds. If it fails, the last good copy is
-used, or the bundled snapshot (`src/beacons_mcp/data/registry_providers.json`) if there never
-was one, and the failure is not retried for five minutes. A provider the registry does not know
-is listed without a description. Descriptions and origins fall back independently: a registry
-document with good descriptions but no usable addresses keeps the live descriptions.
-
-The Hub names providers with short display strings that often differ from the registry's
-`providerName`, so matching is by normalised `providerId`: a display string matches the longest
-id it equals or starts with. No provider name or address appears in the code; they are data.
+The registry (`resources/registry.json`) supplies the origins the viewer may load files from.
+It is fetched when `show_structure` runs, cached for six hours, and never allowed to fail a call.
+The fetch times out after five seconds. If it fails, the last good copy is used, or the bundled
+snapshot (`src/beacons_mcp/data/registry_providers.json`) if there never was one, and the
+failure is not retried for five minutes. Caveats match the Hub's display name against the
+caveat file's keys after lower-casing and dropping punctuation, on the whole name. No provider name or address appears in the code; they are data.
 A test scans the source to keep it that way.
 
 ## Provider CORS check

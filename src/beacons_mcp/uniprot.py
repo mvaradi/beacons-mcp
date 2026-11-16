@@ -108,7 +108,7 @@ def _next_step_note(candidates: list[ProteinCandidate]) -> str:
 async def search_proteins(
     client: httpx.AsyncClient, query: str, organism: str, max_results: int
 ) -> ProteinSearchResult:
-    wanted = taxonomy.resolve(organism)
+    wanted = await taxonomy.resolve(client, organism)
     uniprot_query = build_query(query, wanted.taxon_id)
     size = min(max(max_results * FETCH_FACTOR, MIN_FETCH), MAX_FETCH)
     response = await get(
@@ -152,7 +152,7 @@ async def search_proteins(
     logger.info("search_proteins matched %s entries", total or len(results))
     return ProteinSearchResult(
         query=query.strip(),
-        organism=f"{wanted.name} (taxon {wanted.taxon_id})",
+        organism=wanted.label,
         candidates=candidates,
         total_matches=int(total) if total and total.isdigit() else None,
         note=_next_step_note(candidates),

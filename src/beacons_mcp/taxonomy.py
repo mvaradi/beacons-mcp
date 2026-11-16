@@ -2,25 +2,52 @@
 
 The UniProt search is filtered by taxonomy ID, never by a substring of the organism's
 name: "mouse" is part of "Mouse-ear cress" (Arabidopsis), so a name match returns
-plants. Names are data (``data/organisms.json``); anything not listed must be given as a
-taxon ID, and ambiguous names are an error that lists the choices.
+plants. Names are resolved in this order: a taxon ID as given; the model organisms in
+``data/organisms.json`` (common and Latin names); then UniProt's taxonomy search, taking
+only an exact scientific- or common-name match at species rank or below. Zero or several
+plausible matches are an error that says what to do: a guess could search the wrong
+organism.
 """
 
 import json
+import logging
 import re
 from dataclasses import dataclass
 from functools import cache
 from importlib import resources
 
+import httpx
 from mcp.server.mcpserver.exceptions import ToolError
 
+from beacons_mcp.clients import UNIPROT_TAXONOMY_URL, get
+
+logger = logging.getLogger("beacons_mcp")
+
 LOOKUP_URL = "https://www.uniprot.org/taxonomy"
+
+
+# Words that mean "no organism": never searched as one, never assumed.
+ANY_WORDS = {"any", "all", "anything", "every", "all organisms", "any organism"}
+# Ranks a user can mean by an organism name. A genus or family would match no entry.
+RANKS = {"species", "subspecies", "strain", "varietas"}
+LOOKUP_SIZE = 25
+MAX_LISTED = 5
 
 
 @dataclass(frozen=True)
 class Organism:
     taxon_id: int
     name: str
+    given: str = ""
+
+    @property
+    def label(self) -> str:
+        """What was searched, for the result: 'mouse → Mus musculus (taxon 10090)'."""
+        base = f"{self.name} (taxon {self.taxon_id})"
+        given = self.given.strip()
+        if not given or given.isdigit() or _key(given) == _key(self.name):
+            return base
+        return f"{given} → {base}"
 
 
 def _key(text: str) -> str:
@@ -48,21 +75,76 @@ def _label(taxon: int, scientific: dict[int, str]) -> str:
     return f"{scientific.get(taxon, 'taxon')} (taxon {taxon})"
 
 
-def resolve(organism: str) -> Organism:
+def _empty_or_any(text: str) -> ToolError | None:
+    if text and _key(text) not in ANY_WORDS:
+        return None
+    return ToolError(
+        "organism is required and must name one organism. Ask the user which organism "
+        "they mean (for example 'human', 'mouse' or a taxon ID like 9606); do not assume "
+        "human, and do not search all organisms."
+    )
+
+
+def _lookup_query(name: str) -> str:
+    phrase = " ".join(name.replace('"', " ").replace("\\", " ").split())
+    return f'scientific:"{phrase}" OR common:"{phrase}"'
+
+
+def _plausible(results: list[dict], text: str) -> list[dict]:
+    """Exact name matches at species rank or below; if several, those with proteins."""
+    wanted = _key(text)
+    exact = [
+        r
+        for r in results
+        if r.get("rank") in RANKS
+        and wanted in {_key(r.get("scientificName", "")), _key(r.get("commonName", ""))}
+    ]
+    reviewed = [r for r in exact if r.get("statistics", {}).get("reviewedProteinCount")]
+    return reviewed if len(reviewed) >= 1 and len(exact) > 1 else exact
+
+
+def _option(r: dict) -> str:
+    common = f", {r['commonName']}" if r.get("commonName") else ""
+    return f"{r['scientificName']}{common} (taxon {r['taxonId']})"
+
+
+async def _lookup(client: httpx.AsyncClient, text: str) -> Organism:
+    response = await get(
+        client,
+        UNIPROT_TAXONOMY_URL,
+        service="UniProt taxonomy",
+        params={"query": _lookup_query(text), "format": "json", "size": LOOKUP_SIZE},
+    )
+    results = response.json().get("results", []) if response.status_code == 200 else []
+    found = _plausible(results, text)
+    if len(found) == 1:
+        logger.info("organism %r resolved to taxon %s", text, found[0]["taxonId"])
+        return Organism(found[0]["taxonId"], found[0]["scientificName"], text)
+    if found:
+        options = "; ".join(_option(r) for r in found[:MAX_LISTED])
+        raise ToolError(
+            f"'{text}' matches several organisms: {options}. Ask the user which one they "
+            "mean, then search again with its taxon ID."
+        )
+    raise ToolError(
+        f"Unknown organism '{text}': no species has exactly that name. Check the spelling, "
+        "try the scientific name, or give the NCBI taxon ID (look it up at "
+        f"{LOOKUP_URL}). Ask the user if unsure."
+    )
+
+
+async def resolve(client: httpx.AsyncClient, organism: str) -> Organism:
     """The organism for a taxon ID, a common name or a scientific name.
 
     Raises ToolError, with what to do next, if the name is unknown or ambiguous.
     """
     text = organism.strip()
-    if not text:
-        raise ToolError(
-            "organism is required. Ask the user which organism they mean "
-            "(for example 'human', 'mouse' or a taxon ID like 9606); do not assume human."
-        )
+    if error := _empty_or_any(text):
+        raise error
     by_name, scientific, ambiguous = _table()
     if text.isdigit() and int(text) > 0:
         taxon = int(text)
-        return Organism(taxon, scientific.get(taxon, f"taxon {taxon}"))
+        return Organism(taxon, scientific.get(taxon, f"taxon {taxon}"), text)
     key = _key(text)
     if key in ambiguous:
         options = "; ".join(_label(t, scientific) for t in ambiguous[key])
@@ -72,10 +154,5 @@ def resolve(organism: str) -> Organism:
         )
     if key in by_name:
         taxon = by_name[key]
-        return Organism(taxon, scientific[taxon])
-    raise ToolError(
-        f"Unknown organism '{text}'. Use its NCBI taxon ID (look it up at {LOOKUP_URL}), "
-        "or one of the known names: "
-        + ", ".join(sorted({n for n in by_name if " " not in n and "." not in n}))
-        + ". Ask the user if unsure."
-    )
+        return Organism(taxon, scientific[taxon], text)
+    return await _lookup(client, text)

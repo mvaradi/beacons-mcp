@@ -4,19 +4,23 @@ import httpx
 import pytest
 from conftest import error_text
 
-from beacons_mcp.clients import UNIPROT_SEARCH_URL, USER_AGENT
+from beacons_mcp.clients import UNIPROT_SEARCH_URL, UNIPROT_TAXONOMY_URL, USER_AGENT
 
 
 async def search(client, **arguments):
     return await client.call_tool("search_proteins", arguments)
 
 
-def all_human(body):
-    """The mixed-organism fixture, with every entry made human (the search is by taxon)."""
+def with_taxon(body, taxon_id):
+    """The fixture with every entry in one taxon (the search is by taxon ID)."""
     body = copy.deepcopy(body)
     for item in body["results"]:
-        item["organism"]["taxonId"] = 9606
+        item["organism"]["taxonId"] = taxon_id
     return body
+
+
+def all_human(body):
+    return with_taxon(body, 9606)
 
 
 def mock_search(respx_mock, body, *, total=None, status=200):
@@ -110,7 +114,7 @@ async def test_mouse_never_matches_mouse_ear_cress(client, respx_mock, load_fixt
     assert "organism_id:10090" in query and "organism_name" not in query
     organisms = [c["organism"] for c in result.structured_content["candidates"]]
     assert organisms == ["Mus musculus (Mouse)"]
-    assert result.structured_content["organism"] == "Mus musculus (taxon 10090)"
+    assert result.structured_content["organism"] == "mouse → Mus musculus (taxon 10090)"
 
 
 @pytest.mark.anyio
@@ -123,14 +127,132 @@ async def test_ambiguous_organism_is_an_actionable_error(client, respx_mock, org
     assert not respx_mock.calls
 
 
+def taxon(tax_id, scientific, common=None, rank="species", reviewed=10):
+    entry = {
+        "taxonId": tax_id,
+        "scientificName": scientific,
+        "rank": rank,
+        "statistics": {"reviewedProteinCount": reviewed},
+    }
+    if common:
+        entry["commonName"] = common
+    return entry
+
+
+def mock_taxonomy(respx_mock, *results):
+    return respx_mock.get(UNIPROT_TAXONOMY_URL).respond(200, json={"results": list(results)})
+
+
 @pytest.mark.anyio
-async def test_unknown_organism_is_an_actionable_error(client, respx_mock):
+@pytest.mark.parametrize("organism", ["any", "Any", "anything", "all"])
+async def test_any_organism_is_not_a_thing_and_is_never_searched(
+    client, respx_mock, organism
+):
+    """'any' was never supported: the organism is required and never assumed. It is an
+    error that says to ask, not an organism name sent to UniProt."""
+    result = await search(client, query="p53", organism=organism)
+
+    text = error_text(result)
+    assert "Ask the user" in text and "do not assume human" in text
+    assert not respx_mock.calls
+
+
+@pytest.mark.anyio
+async def test_unlisted_names_are_resolved_by_the_uniprot_taxonomy_search(
+    client, respx_mock, load_fixture
+):
+    lookup = mock_taxonomy(
+        respx_mock,
+        taxon(1642515, "Zebra finch circovirus"),  # a text hit, not an exact name
+        taxon(59729, "Taeniopygia guttata", "Zebra finch"),
+    )
+    route = mock_search(respx_mock, {"results": []})
+
+    await search(client, query="p53", organism="zebra finch")
+
+    assert "zebra finch" in lookup.calls.last.request.url.params["query"]
+    assert "organism_id:59729" in route.calls.last.request.url.params["query"]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("given", "taxon_id", "expected"),
+    [
+        ("human", 9606, "human → Homo sapiens (taxon 9606)"),
+        ("mouse", 10090, "mouse → Mus musculus (taxon 10090)"),
+        ("Homo sapiens", 9606, "Homo sapiens (taxon 9606)"),
+        ("9606", 9606, "Homo sapiens (taxon 9606)"),
+        ("Zebra Finch", 59729, "Zebra Finch → Taeniopygia guttata (taxon 59729)"),
+    ],
+)
+async def test_the_resolved_organism_is_in_the_output(
+    client, respx_mock, load_fixture, given, taxon_id, expected
+):
+    mock_taxonomy(respx_mock, taxon(59729, "Taeniopygia guttata", "Zebra finch"))
+    body = with_taxon(load_fixture("uniprot_search_cbp1_human_gene.json"), taxon_id)
+    mock_search(respx_mock, body)
+
+    result = await search(client, query="CBP1", organism=given)
+
+    assert not result.is_error
+    assert result.structured_content["organism"] == expected
+
+
+@pytest.mark.anyio
+async def test_several_plausible_taxa_is_an_error_that_lists_them(client, respx_mock):
+    mock_taxonomy(
+        respx_mock,
+        taxon(111, "Gus alpha", "Blue gus"),
+        taxon(222, "Gus beta", "Blue Gus"),
+        taxon(333, "Gus gamma", "Blue gus", rank="genus"),  # wrong rank: not plausible
+    )
+
+    result = await search(client, query="p53", organism="blue gus")
+
+    text = error_text(result)
+    assert "matches several organisms" in text
+    assert "Gus alpha, Blue gus (taxon 111)" in text and "taxon 222" in text
+    assert "taxon 333" not in text
+    assert "Ask the user" in text
+    assert len(respx_mock.calls) == 1  # no protein search was made
+
+
+@pytest.mark.anyio
+async def test_several_exact_matches_prefer_the_ones_with_proteins(client, respx_mock):
+    mock_taxonomy(
+        respx_mock,
+        taxon(111, "Gus alpha", "Blue gus", reviewed=0),
+        taxon(222, "Gus beta", "Blue gus", reviewed=12),
+    )
+    route = mock_search(respx_mock, {"results": []})
+
+    await search(client, query="p53", organism="blue gus")
+
+    assert "organism_id:222" in route.calls.last.request.url.params["query"]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "results", [[], [taxon(1, "Something else entirely")], [taxon(2, "Unicorn", rank="genus")]]
+)
+async def test_unknown_organism_is_an_actionable_error(client, respx_mock, results):
+    mock_taxonomy(respx_mock, *results)
+
     result = await search(client, query="p53", organism="unicorn")
 
     text = error_text(result)
     assert "Unknown organism 'unicorn'" in text
-    assert "taxon ID" in text
-    assert not respx_mock.calls
+    assert "taxon ID" in text and "uniprot.org/taxonomy" in text
+    assert len(respx_mock.calls) == 1  # only the taxonomy lookup
+
+
+@pytest.mark.anyio
+async def test_a_failing_taxonomy_lookup_is_reported_not_guessed(client, respx_mock):
+    respx_mock.get(UNIPROT_TAXONOMY_URL).respond(503)
+
+    result = await search(client, query="p53", organism="zebra finch")
+
+    assert "UniProt taxonomy is slow or unavailable" in error_text(result)
 
 
 @pytest.mark.anyio

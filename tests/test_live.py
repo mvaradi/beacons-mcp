@@ -1,7 +1,5 @@
 """Live checks against the real services. Skipped by default; run with `pytest -m live`."""
 
-import logging
-
 import pytest
 
 pytestmark = [pytest.mark.live, pytest.mark.anyio]
@@ -20,11 +18,32 @@ async def test_live_search_proteins(client):
     assert "SERPINH1" in serpin["gene_names"]
 
 
-async def test_live_find_structures(client, caplog):
-    with caplog.at_level(logging.INFO, logger="beacons_mcp"):
-        result = await client.call_tool(
-            "find_structures", {"uniprot_accession": "Q92793"}
-        )
+async def test_live_mouse_p53_returns_only_mouse_proteins(client):
+    result = await client.call_tool(
+        "search_proteins", {"query": "p53", "organism": "mouse"}
+    )
+
+    assert not result.is_error, result.content
+    data = result.structured_content
+    assert data["organism"] == "mouse → Mus musculus (taxon 10090)"
+    assert data["candidates"]
+    assert all(c["organism"].startswith("Mus musculus") for c in data["candidates"])
+    assert "P02340" in {c["accession"] for c in data["candidates"]}
+
+
+async def test_live_unlisted_organism_is_resolved_by_the_taxonomy_search(client):
+    result = await client.call_tool(
+        "search_proteins", {"query": "p53", "organism": "zebra finch"}
+    )
+
+    assert not result.is_error, result.content
+    assert result.structured_content["organism"].endswith(
+        "Taeniopygia guttata (taxon 59729)"
+    )
+
+
+async def test_live_find_structures(client):
+    result = await client.call_tool("find_structures", {"uniprot_accession": "Q92793"})
 
     assert not result.is_error, result.content
     data = result.structured_content

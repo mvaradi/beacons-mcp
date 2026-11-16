@@ -8,92 +8,37 @@ import pytest
 from beacons_mcp.clients import REGISTRY_URL
 from beacons_mcp.registry import (
     FETCH_TIMEOUT,
-    MAX_DESCRIPTION_CHARS,
     Registry,
-    describe,
-    first_sentence,
-    parse,
-    snapshot,
+    caveat,
+    parse_origins,
+    snapshot_origins,
 )
 
-# ---- matching and the bundled snapshot ------------------------------------------
+# ---- the bundled snapshot and the provider caveats ------------------------------
 
 
-def test_hub_display_names_resolve_to_registry_descriptions(load_fixture):
-    # Every provider string seen in the captured Hub responses must resolve, even
-    # though the Hub's display names differ from the registry's provider names.
-    seen = {
-        item["summary"]["provider"]
-        for name in ("P69905", "Q92793", "P37840")
-        for item in load_fixture(f"hub_summary_{name}.json")["structures"]
-    }
-    assert len(seen) >= 8
-    descriptions = snapshot()
-    assert {name for name in seen if describe(name, descriptions) is None} == set()
-
-
-def test_unknown_providers_have_no_description():
-    assert describe("Some Brand New Provider", snapshot()) is None
-    assert describe("", snapshot()) is None
-
-
-def test_matching_ignores_case_and_punctuation_and_prefers_the_longest_id():
-    descriptions = {"alpha": "Short id.", "alphafold": "Long id."}
-
-    assert describe("ALPHA", descriptions) == "Short id."
-    assert describe("AlphaFold DB", descriptions) == "Long id."
-    assert describe("alpha-fold.x", descriptions) == "Long id."
-    assert describe("Alph", descriptions) is None
-
-
-def test_bundled_snapshot_is_readable_text_and_parses():
+def test_bundled_snapshot_is_readable_text_and_has_origins():
     """Guards against the encoding damage that once turned apostrophes into mojibake."""
     text = (
         resources.files("beacons_mcp") / "data" / "registry_providers.json"
     ).read_text(encoding="utf-8")
     assert "â€" not in text
-    assert parse(json.loads(text)) == snapshot()
-    assert len(snapshot()) >= 10
+    assert json.loads(text)["providers"]
+    assert len(snapshot_origins()) >= 10
 
 
-def test_parse_skips_incomplete_entries_and_rejects_an_empty_registry():
-    document = {
-        "providers": [
-            {"providerId": "ok", "providerDescription": "Fine."},
-            {"providerId": "", "providerDescription": "No id."},
-            {"providerId": "nodesc"},
-        ]
-    }
-    assert parse(document) == {"ok": "Fine."}
-    with pytest.raises(ValueError):
-        parse({"providers": []})
-    with pytest.raises(KeyError):
-        parse({"unexpected": "shape"})
-
-
-@pytest.mark.parametrize(
-    ("text", "expected"),
-    [
-        ("One sentence. And another one.", "One sentence."),
-        ("No full stop at all", "No full stop at all"),
-        ("Uses the program (DeepView). Then more.", "Uses the program (DeepView)."),
-        ("Line one\n  wrapped.  Next.", "Line one wrapped."),
-        ("Version 2.5 is fine. Done.", "Version 2.5 is fine."),
-    ],
-)
-def test_first_sentence(text, expected):
-    assert first_sentence(text) == expected
-
-
-def test_first_sentence_is_cut_to_the_limit():
-    cut = first_sentence("word " * 200)
-    assert len(cut) <= MAX_DESCRIPTION_CHARS
-    assert cut.endswith("…")
+def test_caveats_match_the_whole_name_ignoring_case_and_punctuation():
+    assert "esigned" in caveat("Bindome")
+    assert caveat("BINDOME") == caveat("bind-ome")
+    assert caveat("AlphaFold DB") is None
+    assert caveat("Some Brand New Provider") is None
+    assert caveat("") is None
 
 
 # ---- the live registry, its cache and its fallback -------------------------------
 
-LIVE = {"providers": [{"providerId": "newbeacon", "providerDescription": "Live only."}]}
+LIVE = {"providers": [{"providerId": "newbeacon", "baseServiceUrl": "https://files.newbeacon.example.org/api/"}]}
+LIVE_ORIGINS = ["https://files.newbeacon.example.org"]
 
 
 class Clock:
@@ -119,17 +64,14 @@ async def http():
 async def test_live_registry_is_used_and_a_new_beacon_is_found(http, respx_mock):
     respx_mock.get(REGISTRY_URL).respond(200, json=LIVE)
 
-    descriptions = await Registry(http).descriptions()
-
-    assert descriptions == {"newbeacon": "Live only."}
-    assert describe("NewBeacon", descriptions) == "Live only."
+    assert await Registry(http).origins() == LIVE_ORIGINS
 
 
 @pytest.mark.anyio
 async def test_fetch_uses_a_short_timeout(http, respx_mock):
     route = respx_mock.get(REGISTRY_URL).respond(200, json=LIVE)
 
-    await Registry(http).descriptions()
+    await Registry(http).origins()
 
     assert (
         route.calls.last.request.extensions["timeout"]["read"]
@@ -143,13 +85,13 @@ async def test_fetched_once_within_the_ttl_and_again_after_it(http, respx_mock, 
     route = respx_mock.get(REGISTRY_URL).respond(200, json=LIVE)
     registry = Registry(http, ttl=100, clock=clock)
 
-    await registry.descriptions()
+    await registry.origins()
     clock.now += 99
-    await registry.descriptions()
+    await registry.origins()
     assert route.call_count == 1
 
     clock.now += 2  # past the ttl
-    await registry.descriptions()
+    await registry.origins()
     assert route.call_count == 2
 
 
@@ -158,10 +100,10 @@ async def test_concurrent_callers_share_one_fetch(http, respx_mock):
     route = respx_mock.get(REGISTRY_URL).respond(200, json=LIVE)
     registry = Registry(http)
 
-    results = await asyncio.gather(*(registry.descriptions() for _ in range(5)))
+    results = await asyncio.gather(*(registry.origins() for _ in range(5)))
 
     assert route.call_count == 1
-    assert all(r == {"newbeacon": "Live only."} for r in results)
+    assert all(r == LIVE_ORIGINS for r in results)
 
 
 @pytest.mark.anyio
@@ -197,7 +139,7 @@ async def test_snapshot_is_the_fallback_when_there_never_was_a_live_copy(
     else:
         route.mock(side_effect=failure)
 
-    assert await Registry(http).descriptions() == snapshot()
+    assert await Registry(http).origins() == snapshot_origins()
 
 
 @pytest.mark.anyio
@@ -207,14 +149,14 @@ async def test_failure_is_not_retried_until_the_retry_window_has_passed(
     route = respx_mock.get(REGISTRY_URL).respond(500)
     registry = Registry(http, retry_after=60, clock=clock)
 
-    assert await registry.descriptions() == snapshot()
+    assert await registry.origins() == snapshot_origins()
     clock.now += 59
-    assert await registry.descriptions() == snapshot()
+    assert await registry.origins() == snapshot_origins()
     assert route.call_count == 1  # no hammering a service that is down
 
     route.respond(200, json=LIVE)  # it recovers
     clock.now += 2
-    assert await registry.descriptions() == {"newbeacon": "Live only."}
+    assert await registry.origins() == LIVE_ORIGINS
     assert route.call_count == 2
 
 
@@ -224,19 +166,16 @@ async def test_a_stale_live_copy_beats_the_snapshot_when_a_refresh_fails(
 ):
     route = respx_mock.get(REGISTRY_URL).respond(200, json=LIVE)
     registry = Registry(http, ttl=100, retry_after=10, clock=clock)
-    await registry.descriptions()
+    await registry.origins()
 
     route.respond(503)
     clock.now += 101  # expired, and the refresh fails
 
-    assert await registry.descriptions() == {"newbeacon": "Live only."}
+    assert await registry.origins() == LIVE_ORIGINS
     assert route.call_count == 2
 
 
 # ---- origins (where the viewer may load model files from) ---------------------------
-
-from beacons_mcp.registry import parse_origins, snapshot_origins
-
 
 def test_origins_are_the_https_service_hosts_sorted_and_unique(load_fixture):
     registry = load_fixture("registry_providers.json")
@@ -305,7 +244,6 @@ LIVE_BOTH = {
     "providers": [
         {
             "providerId": "newbeacon",
-            "providerDescription": "Live only.",
             "baseServiceUrl": "https://files.newbeacon.example.org/api/",
         }
     ]
@@ -317,38 +255,6 @@ async def test_live_origins_are_used(http, respx_mock):
     respx_mock.get(REGISTRY_URL).respond(200, json=LIVE_BOTH)
 
     assert await Registry(http).origins() == ["https://files.newbeacon.example.org"]
-
-
-@pytest.mark.anyio
-async def test_descriptions_and_origins_share_one_fetch(http, respx_mock):
-    route = respx_mock.get(REGISTRY_URL).respond(200, json=LIVE_BOTH)
-    registry = Registry(http)
-
-    await registry.descriptions()
-    await registry.origins()
-
-    assert route.call_count == 1
-
-
-@pytest.mark.anyio
-async def test_live_descriptions_survive_when_the_addresses_are_unusable(
-    http, respx_mock
-):
-    """Each part falls back on its own: bad addresses must not discard good descriptions."""
-    document = {
-        "providers": [
-            {
-                "providerId": "x",
-                "providerDescription": "Fine.",
-                "baseServiceUrl": "ftp://nope",
-            }
-        ]
-    }
-    respx_mock.get(REGISTRY_URL).respond(200, json=document)
-    registry = Registry(http)
-
-    assert await registry.descriptions() == {"x": "Fine."}
-    assert await registry.origins() == snapshot_origins()
 
 
 @pytest.mark.anyio

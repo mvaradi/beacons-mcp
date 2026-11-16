@@ -18,7 +18,9 @@ class ProteinCandidate(BaseModel):
 
 class ProteinSearchResult(BaseModel):
     query: str = Field(description="The name that was searched for.")
-    organism: str = Field(description="The organism filter that was applied.")
+    organism: str = Field(
+        description="The organism searched, as resolved: 'mouse → Mus musculus (taxon 10090)'."
+    )
     candidates: list[ProteinCandidate] = Field(
         description="Ranked candidates, reviewed entries first."
     )
