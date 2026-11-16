@@ -17,3 +17,6 @@ __pycache__/
 # Viewer (MCP App) build: node_modules and the generated page
 viewer/node_modules/
 src/beacons_mcp/ui/viewer.html
+
+# Flight recorder logs (local only)
+.claude/logs/

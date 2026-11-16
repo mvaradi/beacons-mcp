@@ -1,0 +1,9 @@
+{"timestamp":"2026-11-16T10:00:00.000+00:00","hook_event_name":"UserPromptSubmit","session_id":"s1","prompt":{"chars":30,"head":"show me CBP structures"}}
+{"timestamp":"2026-11-16T10:00:01.000+00:00","hook_event_name":"PreToolUse","tool_name":"mcp__beacons__search_proteins","mcp_server":"beacons","tool_use_id":"toolu_aaaaaa111111","tool_input":{"query":"CBP"}}
+{"timestamp":"2026-11-16T10:00:01.100+00:00","hook_event_name":"Elicitation","mcp_server":"beacons","message":{"chars":20,"head":"Which protein?"}}
+{"timestamp":"2026-11-16T10:00:03.000+00:00","hook_event_name":"ElicitationResult","mcp_server":"beacons","action":"accept"}
+{"timestamp":"2026-11-16T10:00:03.500+00:00","hook_event_name":"PostToolUse","tool_name":"mcp__beacons__search_proteins","mcp_server":"beacons","tool_use_id":"toolu_aaaaaa111111","duration_ms":2500,"tool_response":{"chars":900,"head":"{}"}}
+{"timestamp":"2026-11-16T10:00:03.600+00:00","hook_event_name":"PreToolUse","tool_name":"Read","tool_use_id":"toolu_bbbbbb222222","tool_input":{"file_path":"x"}}
+{"timestamp":"2026-11-16T10:00:03.700+00:00","hook_event_name":"PostToolUseFailure","tool_name":"Read","tool_use_id":"toolu_bbbbbb222222","duration_ms":12,"error":{"chars":14,"head":"File not found"}}
+{"timestamp":"2026-11-16T10:00:03.800+00:00","hook_event_name":"PostToolBatch","tool_calls":[{"tool_name":"mcp__beacons__search_proteins","tool_use_id":"toolu_aaaaaa111111","tool_response":{"chars":1200,"head":"..."}},{"tool_name":"Read","tool_use_id":"toolu_bbbbbb222222","tool_response":{"chars":20,"head":"File not found"}}]}
+{"timestamp":"2026-11-16T10:00:06.000+00:00","hook_event_name":"Stop","last_assistant_message":{"chars":50,"head":"Here it is"}}

@@ -206,6 +206,22 @@ into one HTML file). It needs Node 22.12 or newer. The build stubs out Mol*'s MP
 a sandbox's content security policy would stop from loading, and keeps the third-party licence
 notices as a comment at the top of the page.
 
+## Flight recorder
+
+Project hooks in `.claude/settings.json` run `.claude/hooks/flight_recorder.py` on `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Elicitation`, `ElicitationResult` and `Stop`. Each event appends one JSON line to `.claude/logs/flight-<session_id>.jsonl`: timestamp, event, tool name, MCP server, `tool_use_id`, tool input, duration, and for every response or content field its size in characters plus the first 400. `PostToolBatch` records each call's result as the model saw it, so you can compare it with the structured `PostToolUse` response. The hook prints nothing, never blocks, and always exits 0.
+
+Logs stay on your machine (`.claude/logs/` is git-ignored). Hooks run only in Claude Code (CLI, the desktop Code tab, IDE extensions), not in other MCP clients. The hook command is `python`; if your system only has `python3`, edit the command in `.claude/settings.json`.
+
+You should see `.claude/logs/flight-*.jsonl` after your first prompt. If not, the hooks aren't loaded.
+
+Read a log as a timeline (newest log if no path is given):
+
+```bash
+python scripts/loop_timeline.py
+```
+
+It shows numbered model requests, tool batches, paired `tool_use_id`s, durations, failures, elicitations, and totals, including characters returned to the model.
+
 ## Data and attribution
 
 The code in this repository is MIT-licensed (see [Licence](#licence)). The data it returns is
