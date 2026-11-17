@@ -2,7 +2,9 @@
 
 The UniProt search is filtered by taxonomy ID, never by a substring of the organism's
 name: "mouse" is part of "Mouse-ear cress" (Arabidopsis), so a name match returns
-plants. Names are resolved in this order: a taxon ID as given; the model organisms in
+plants. The one exception is an explicit "any organism" (see ``ANY_WORDS``): then no
+taxon filter is used and only reviewed entries are searched, and the result says so.
+Names are resolved in this order: a taxon ID as given; the model organisms in
 ``data/organisms.json`` (common and Latin names); then UniProt's taxonomy search, taking
 only an exact scientific- or common-name match at species rank or below. Zero or several
 plausible matches are an error that says what to do: a guess could search the wrong
@@ -26,8 +28,15 @@ logger = logging.getLogger("beacons_mcp")
 LOOKUP_URL = "https://www.uniprot.org/taxonomy"
 
 
-# Words that mean "no organism": never searched as one, never assumed.
-ANY_WORDS = {"any", "all", "anything", "every", "all organisms", "any organism"}
+# Words that mean the user does not care which organism: search all of them (reviewed
+# entries only). Empty is not one of them: an omitted organism is still asked about.
+ANY_WORDS = {
+    "any", "all", "anything", "every", "everything", "whatever",
+    "all organisms", "any organism", "all species", "any species", "every species",
+    "dont care", "do not care", "doesnt matter", "does not matter", "no preference",
+    "dont mind", "do not mind", "i dont care",
+}
+ALL_ORGANISMS_LABEL = "all organisms, reviewed only"
 # Ranks a user can mean by an organism name. A genus or family would match no entry.
 RANKS = {"species", "subspecies", "strain", "varietas"}
 LOOKUP_SIZE = 25
@@ -36,13 +45,15 @@ MAX_LISTED = 5
 
 @dataclass(frozen=True)
 class Organism:
-    taxon_id: int
+    taxon_id: int | None  # None: all organisms
     name: str
     given: str = ""
 
     @property
     def label(self) -> str:
         """What was searched, for the result: 'mouse → Mus musculus (taxon 10090)'."""
+        if self.taxon_id is None:
+            return ALL_ORGANISMS_LABEL
         base = f"{self.name} (taxon {self.taxon_id})"
         given = self.given.strip()
         if not given or given.isdigit() or _key(given) == _key(self.name):
@@ -51,7 +62,9 @@ class Organism:
 
 
 def _key(text: str) -> str:
-    return " ".join(re.sub(r"\([^)]*\)", " ", text).lower().split())
+    text = re.sub(r"\([^)]*\)", " ", text).lower()
+    text = re.sub(r"['’`.!?]", "", text)  # "don't" == "dont", "S. pombe" == "S pombe"
+    return " ".join(text.split())
 
 
 @cache
@@ -75,13 +88,13 @@ def _label(taxon: int, scientific: dict[int, str]) -> str:
     return f"{scientific.get(taxon, 'taxon')} (taxon {taxon})"
 
 
-def _empty_or_any(text: str) -> ToolError | None:
-    if text and _key(text) not in ANY_WORDS:
+def _empty(text: str) -> ToolError | None:
+    if text:
         return None
     return ToolError(
-        "organism is required and must name one organism. Ask the user which organism "
-        "they mean (for example 'human', 'mouse' or a taxon ID like 9606); do not assume "
-        "human, and do not search all organisms."
+        "organism is required. Ask the user which organism they mean (for example "
+        "'human', 'mouse' or a taxon ID like 9606); do not assume human. If they say "
+        "they do not care, pass 'any' to search all organisms (reviewed entries only)."
     )
 
 
@@ -139,8 +152,10 @@ async def resolve(client: httpx.AsyncClient, organism: str) -> Organism:
     Raises ToolError, with what to do next, if the name is unknown or ambiguous.
     """
     text = organism.strip()
-    if error := _empty_or_any(text):
+    if error := _empty(text):
         raise error
+    if _key(text) in ANY_WORDS:
+        return Organism(None, "all organisms", text)
     by_name, scientific, ambiguous = _table()
     if text.isdigit() and int(text) > 0:
         taxon = int(text)

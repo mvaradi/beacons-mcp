@@ -54,8 +54,10 @@ to ask the user. The organism is resolved to an NCBI taxonomy ID (`taxonomy.py`,
 `data/organisms.json`) and the search filters on `taxonomy_id`, never on a name: "mouse" is a
 substring of "Mouse-ear cress". Names not in that file are looked up in the UniProt taxonomy
 search and accepted only on one exact scientific- or common-name match at species rank or
-below; zero or several matches are an error that lists the options. "any" is an error too: the
-organism is never assumed. The result reports what was searched, e.g.
+below; zero or several matches are an error that lists the options. An empty organism is an
+error: it is never assumed. If the user says they do not care ("any", "any species", "don't
+care"), the search drops the taxon filter and returns reviewed entries only, and the result
+says `all organisms, reviewed only`. The result reports what was searched, e.g.
 `mouse → Mus musculus (taxon 10090)`. The filter is `taxonomy_id`, which includes descendants
 (`organism_id` is exact and would miss entries filed under a strain), so the table maps names to
 species. Each hit is checked against the entry's own `lineage` taxon IDs from UniProt: the

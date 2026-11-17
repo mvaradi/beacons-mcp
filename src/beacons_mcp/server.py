@@ -181,7 +181,9 @@ async def search_proteins(
         Field(
             description=(
                 "Common name, scientific name or taxon ID, e.g. 'human', 'Homo sapiens' "
-                "or '9606'. Required: ask the user if they have not said."
+                "or '9606'. Required: ask the user if they have not said. Pass 'any' only if "
+                "the user says they do not care which organism (all organisms, reviewed "
+                "entries only)."
             ),
             examples=["human", "Homo sapiens", "9606"],
         ),

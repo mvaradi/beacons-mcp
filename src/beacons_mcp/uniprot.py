@@ -28,17 +28,20 @@ def _clean(text: str) -> str:
     return " ".join(text.replace('"', " ").replace("\\", " ").split())
 
 
-def build_query(query: str, taxon_id: int, reviewed: bool | None = None) -> str:
+def build_query(query: str, taxon_id: int | None, reviewed: bool | None = None) -> str:
     """Build the UniProt query: gene or protein names, in a taxon and everything below it.
 
     ``taxonomy_id`` includes descendants (strains, subspecies); ``organism_id`` is exact.
+    ``taxon_id`` None searches all organisms.
     """
     name = _clean(query)
     if not name:
         raise ToolError(
             "query is empty. Provide a protein or gene name such as 'hemoglobin alpha' or 'BRCA1'."
         )
-    text = f'(gene:"{name}" OR protein_name:"{name}") AND taxonomy_id:{taxon_id}'
+    text = f'(gene:"{name}" OR protein_name:"{name}")'
+    if taxon_id is not None:
+        text += f" AND taxonomy_id:{taxon_id}"
     if reviewed is not None:
         text += f" AND reviewed:{str(reviewed).lower()}"
     return text
@@ -83,12 +86,27 @@ def parse_candidate(item: dict[str, Any]) -> ProteinCandidate:
     )
 
 
-def _in_taxon(item: dict[str, Any], wanted: int) -> bool:
+def _is_exact(candidate: ProteinCandidate, query: str) -> bool:
+    """The protein name or a gene name equals the query, ignoring case."""
+    wanted = _clean(query).casefold()
+    names = [candidate.protein_name or "", *candidate.gene_names]
+    return wanted in {n.casefold() for n in names}
+
+
+def _rank(candidates: list[ProteinCandidate], query: str) -> list[ProteinCandidate]:
+    """Exact name or gene matches first, then reviewed before unreviewed; UniProt's
+    relevance order is kept within each group (the sort is stable)."""
+    return sorted(candidates, key=lambda c: (not _is_exact(c, query), not c.reviewed))
+
+
+def _in_taxon(item: dict[str, Any], wanted: int | None) -> bool:
     """True for an entry of ``wanted`` itself or of any descendant of it.
 
     The ancestors come from UniProt's own ``lineages`` (taxon IDs) in the entry; they
     exclude the entry's own taxon, which is checked separately. No taxon, no match.
     """
+    if wanted is None:
+        return True
     if item.get("organism", {}).get("taxonId") == wanted:
         return True
     return any(t.get("taxonId") == wanted for t in item.get("lineages", []))
@@ -146,7 +164,7 @@ def _next_step_note(candidates: list[ProteinCandidate]) -> str:
 
 
 async def _fetch(
-    client: httpx.AsyncClient, query: str, wanted: int, reviewed: bool, size: int
+    client: httpx.AsyncClient, query: str, wanted: int | None, reviewed: bool, size: int
 ) -> tuple[list[dict[str, Any]], int | None]:
     response = await get(
         client,
@@ -181,25 +199,28 @@ async def search_proteins(
     # A search below a species (E. coli: thousands of strain entries) is dominated by
     # unreviewed entries, so ask for the reviewed ones first and top up from the rest.
     reviewed, reviewed_total = await _fetch(client, query, wanted.taxon_id, True, size)
-    reviewed = reviewed[:max_results]
-    room = max_results - len(reviewed)
-    unreviewed, unreviewed_total = await _fetch(
-        client, query, wanted.taxon_id, False, max(room, 1)
-    )
-    results = reviewed + unreviewed[:room]
-    if not results:
+    reviewed = _rank([parse_candidate(i) for i in reviewed], query)[:max_results]
+    if wanted.taxon_id is None:
+        # Across all organisms the unreviewed entries are mostly noise: reviewed only.
+        unreviewed, unreviewed_total, room = [], 0, 0
+    else:
+        room = max_results - len(reviewed)
+        unreviewed, unreviewed_total = await _fetch(
+            client, query, wanted.taxon_id, False, max(room, 1)
+        )
+    candidates = _rank(reviewed + [parse_candidate(i) for i in unreviewed[:room]], query)
+    if not candidates:
         raise ToolError(
             f"No UniProt entry matches '{query.strip()}' in '{organism.strip()}'. "
             "Check the spelling, try the full protein name (or the official gene symbol), "
             "and check that the organism is right."
         )
 
-    candidates = [parse_candidate(item) for item in results]
     totals = [t for t in (reviewed_total, unreviewed_total) if t is not None]
     total = sum(totals) if len(totals) == 2 else None
-    logger.info("search_proteins matched %s entries", total or len(results))
+    logger.info("search_proteins matched %s entries", total or len(candidates))
     receipt = wanted.label
-    if filed := _filed_under(candidates, wanted.taxon_id):
+    if wanted.taxon_id is not None and (filed := _filed_under(candidates, wanted.taxon_id)):
         receipt = f"{receipt}; {filed}"
     return ProteinSearchResult(
         query=query.strip(),

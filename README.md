@@ -95,7 +95,7 @@ npm run build    # writes src/beacons_mcp/ui/viewer.html (about 5 MB, not commit
 
 | Tool | What it does |
 |---|---|
-| `search_proteins(query, organism, max_results=5)` | Maps a protein or gene name plus an **organism** to UniProt accessions, using the [UniProt REST API](https://www.uniprot.org/help/api). Gene synonyms match and reviewed (Swiss-Prot) entries come first. The organism is required and never assumed: the model is told to ask the user. |
+| `search_proteins(query, organism, max_results=5)` | Maps a protein or gene name plus an **organism** to UniProt accessions, using the [UniProt REST API](https://www.uniprot.org/help/api). Gene synonyms match and reviewed (Swiss-Prot) entries come first. The organism is required and never assumed: the model is told to ask the user. If the user does not care, the search covers all organisms, reviewed entries only, and says so. |
 | `find_structures(uniprot_accession, max_results=10)` | Lists the structure models for an accession from the [3D-Beacons Hub](https://www.ebi.ac.uk/pdbe/pdbe-kb/3dbeacons/api/v2/openapi.json): totals by provider and category, then a selection of models with residue range, how much of the protein each spans, resolution or confidence, and file URL and format. It returns links and downloads nothing. |
 | `show_structure(uniprot_accession, model_id)` | Opens one model from `find_structures` in an interactive [Mol*](https://molstar.org) viewer inside the chat, in apps that support [MCP Apps](https://modelcontextprotocol.io/extensions/apps/overview). Other clients get a text summary and the file URL. |
 

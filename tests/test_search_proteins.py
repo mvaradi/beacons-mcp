@@ -157,17 +157,29 @@ def mock_taxonomy(respx_mock, *results):
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("organism", ["any", "Any", "anything", "all"])
-async def test_any_organism_is_not_a_thing_and_is_never_searched(
-    client, respx_mock, organism
+@pytest.mark.parametrize(
+    "organism",
+    ["any", "Any", "anything", "all", "any species", "all organisms", "don't care",
+     "Don’t care", "doesn't matter", "no preference"],
+)
+async def test_any_organism_searches_everything_reviewed_only_and_says_so(
+    client, respx_mock, load_fixture, organism
 ):
-    """'any' was never supported: the organism is required and never assumed. It is an
-    error that says to ask, not an organism name sent to UniProt."""
-    result = await search(client, query="p53", organism=organism)
+    """The user said they do not care: no taxon filter, reviewed entries only, and the
+    receipt says so (the result must not look like a search of one organism)."""
+    body = load_fixture("uniprot_search_cbp1_any_organism.json")
+    route = mock_search(respx_mock, body)
 
-    text = error_text(result)
-    assert "Ask the user" in text and "do not assume human" in text
-    assert not respx_mock.calls
+    result = await search(client, query="CBP1", organism=organism)
+
+    assert not result.is_error
+    data = result.structured_content
+    assert data["organism"] == "all organisms, reviewed only"
+    assert data["candidates"] and all(c["reviewed"] for c in data["candidates"])
+    assert len(route.calls) == 1  # no unreviewed top-up
+    query = route.calls.last.request.url.params["query"]
+    assert "taxonomy_id" not in query and "organism" not in query
+    assert "reviewed:true" in query
 
 
 @pytest.mark.anyio
@@ -513,3 +525,31 @@ async def test_reviewed_entries_are_requested_first_and_the_cap_still_applies(
     assert "reviewed:true" in queries[0] and "reviewed:false" in queries[1]
     accessions = [c["accession"] for c in result.structured_content["candidates"]]
     assert accessions == ["P00000", "P00001", "A00000", "A00001"]  # reviewed first, cap 4
+
+
+@pytest.mark.anyio
+async def test_exact_name_or_gene_match_goes_before_uniprots_order(
+    client, respx_mock, load_fixture
+):
+    """'actin' in Candida: UniProt ranks actin-binding proteins first; the entry that is
+    called Actin (or whose gene symbol is the query, any case) must lead, reviewed first."""
+
+    def entry(accession, name, gene, reviewed=True):
+        item = strain_entry(load_fixture, accession, 9606, "Homo sapiens", [], reviewed=reviewed)
+        item["proteinDescription"] = {"recommendedName": {"fullName": {"value": name}}}
+        item["genes"] = [{"geneName": {"value": gene}}]
+        return item
+
+    body = {"results": [
+        entry("A00001", "Actin-regulating kinase PRK1", "PRK1"),
+        entry("A00002", "Actin cytoskeleton-regulatory complex protein SLA1", "SLA1"),
+        entry("A00003", "Actin", "ACT1"),
+        entry("A00004", "Something else", "ACTIN", reviewed=False),
+    ]}
+    mock_search(respx_mock, body)
+
+    result = await search(client, query="actin", organism="human")
+
+    accessions = [c["accession"] for c in result.structured_content["candidates"]]
+    # exact reviewed, exact unreviewed, then the rest in UniProt order
+    assert accessions == ["A00003", "A00004", "A00001", "A00002"]
