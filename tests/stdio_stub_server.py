@@ -27,7 +27,14 @@ def _handler(request: httpx.Request) -> httpx.Response:
             if ambiguous
             else "uniprot_search_cbp1_human_gene.json"
         )
-        return httpx.Response(200, json=_load(name))
+        # The server asks for reviewed entries, then unreviewed ones: answer each with its share.
+        reviewed = "reviewed:true" in request.url.params["query"]
+        items = [
+            i
+            for i in _load(name)["results"]
+            if i["entryType"].startswith("UniProtKB reviewed") == reviewed
+        ]
+        return httpx.Response(200, json={"results": items})
     return httpx.Response(404, json={})
 
 

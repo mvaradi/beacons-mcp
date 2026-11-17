@@ -15,12 +15,13 @@
     {"taxon_id": 8355, "scientific_name": "Xenopus laevis", "names": ["african clawed frog", "xenopus laevis"]},
     {"taxon_id": 8364, "scientific_name": "Xenopus tropicalis", "names": ["western clawed frog"]},
     {"taxon_id": 3702, "scientific_name": "Arabidopsis thaliana", "names": ["thale cress", "mouse-ear cress", "arabidopsis"]},
-    {"taxon_id": 559292, "scientific_name": "Saccharomyces cerevisiae (strain ATCC 204508 / S288c)", "names": ["baker's yeast", "bakers yeast", "budding yeast", "saccharomyces cerevisiae", "s. cerevisiae"]},
-    {"taxon_id": 284812, "scientific_name": "Schizosaccharomyces pombe (strain 972 / ATCC 24843)", "names": ["fission yeast", "schizosaccharomyces pombe", "s. pombe"]},
-    {"taxon_id": 83333, "scientific_name": "Escherichia coli (strain K12)", "names": ["e. coli", "escherichia coli", "e. coli k-12", "escherichia coli k-12"]}
+    {"taxon_id": 4932, "scientific_name": "Saccharomyces cerevisiae", "names": ["baker's yeast", "bakers yeast", "budding yeast", "s. cerevisiae"]},
+    {"taxon_id": 4896, "scientific_name": "Schizosaccharomyces pombe", "names": ["fission yeast", "s. pombe"]},
+    {"taxon_id": 562, "scientific_name": "Escherichia coli", "names": ["e. coli"]},
+    {"taxon_id": 83333, "scientific_name": "Escherichia coli (strain K12)", "names": ["e. coli k-12", "escherichia coli k-12"]}
   ],
   "ambiguous": {
-    "yeast": [559292, 284812],
+    "yeast": [4932, 4896],
     "monkey": [9544],
     "frog": [8355, 8364],
     "xenopus": [8355, 8364],

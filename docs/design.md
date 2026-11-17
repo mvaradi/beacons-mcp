@@ -51,13 +51,17 @@ through and sorts last.
 
 `search_proteins` needs an organism and never assumes one: the tool description tells the model
 to ask the user. The organism is resolved to an NCBI taxonomy ID (`taxonomy.py`,
-`data/organisms.json`) and the search filters on `organism_id`, never on a name: "mouse" is a
+`data/organisms.json`) and the search filters on `taxonomy_id`, never on a name: "mouse" is a
 substring of "Mouse-ear cress". Names not in that file are looked up in the UniProt taxonomy
 search and accepted only on one exact scientific- or common-name match at species rank or
 below; zero or several matches are an error that lists the options. "any" is an error too: the
 organism is never assumed. The result reports what was searched, e.g.
-`mouse → Mus musculus (taxon 10090)`. The filter is exact (`organism_id`), so a species-level ID
-does not include entries filed under its strains.
+`mouse → Mus musculus (taxon 10090)`. The filter is `taxonomy_id`, which includes descendants
+(`organism_id` is exact and would miss entries filed under a strain), so the table maps names to
+species. Each hit is checked against the entry's own `lineage` taxon IDs from UniProt: the
+taxon or a descendant passes, anything else is dropped. Reviewed entries are requested first
+and unreviewed ones only fill what is left of the cap. A hit filed under a strain is named in
+the result: `...; P60010 filed under strain 559292`.
 
 When a search is ambiguous (several reviewed entries, or only unreviewed ones), the server
 asks the user to choose, using MCP

@@ -24,10 +24,20 @@ def all_human(body):
 
 
 def mock_search(respx_mock, body, *, total=None, status=200):
-    headers = {"x-total-results": str(total)} if total is not None else {}
-    return respx_mock.get(UNIPROT_SEARCH_URL).respond(
-        status, json=body, headers=headers
-    )
+    """UniProt, as far as the search goes: the query's ``reviewed:true|false`` clause
+    picks which of ``body``'s entries come back (the server makes one request for each)."""
+
+    def respond(request):
+        wanted = "reviewed:true" in request.url.params["query"]
+        items = [
+            i
+            for i in body.get("results", [])
+            if i.get("entryType", "").startswith("UniProtKB reviewed") == wanted
+        ]
+        headers = {"x-total-results": str(len(items))} if total is not None else {}
+        return httpx.Response(status, json={"results": items}, headers=headers)
+
+    return respx_mock.get(UNIPROT_SEARCH_URL).mock(side_effect=respond)
 
 
 @pytest.mark.anyio
@@ -51,6 +61,7 @@ async def test_name_in_organism_maps_to_ranked_candidate(
             # "CBP1" is a synonym of the primary gene name: primary first, then synonyms.
             "gene_names": ["SERPINH1", "CBP1", "CBP2", "HSP47", "SERPINH2"],
             "organism": "Homo sapiens (Human)",
+            "taxon_id": 9606,
             "reviewed": True,
         }
     ]
@@ -60,12 +71,12 @@ async def test_name_in_organism_maps_to_ranked_candidate(
     query = sent.url.params["query"]
     assert 'gene:"CBP1"' in query
     assert 'protein_name:"CBP1"' in query
-    assert "organism_id:9606" in query
+    assert "taxonomy_id:9606" in query
     assert "organism_name" not in query
     assert sent.url.params["format"] == "json"
     assert (
         sent.url.params["fields"]
-        == "accession,id,protein_name,gene_names,organism_name,reviewed"
+        == "accession,id,protein_name,gene_names,organism_name,reviewed,lineage"
     )
     assert sent.headers["user-agent"] == USER_AGENT
 
@@ -76,7 +87,7 @@ async def test_numeric_organism_is_sent_as_taxon_id(client, respx_mock, load_fix
 
     await search(client, query="CBP1", organism="9606")
 
-    assert "organism_id:9606" in route.calls.last.request.url.params["query"]
+    assert "taxonomy_id:9606" in route.calls.last.request.url.params["query"]
 
 
 @pytest.mark.anyio
@@ -86,11 +97,13 @@ async def test_numeric_organism_is_sent_as_taxon_id(client, respx_mock, load_fix
      ("Homo sapiens (Human)", 9606), ("mouse-ear cress", 3702)],
 )
 async def test_names_resolve_to_taxon_ids(client, respx_mock, load_fixture, name, taxon):
-    route = mock_search(respx_mock, all_human(load_fixture("uniprot_search_cbp1_human_gene.json")))
+    route = mock_search(
+        respx_mock, with_taxon(load_fixture("uniprot_search_cbp1_human_gene.json"), taxon)
+    )
 
     await search(client, query="CBP1", organism=name)
 
-    assert f"organism_id:{taxon}" in route.calls.last.request.url.params["query"]
+    assert f"taxonomy_id:{taxon}" in route.calls.last.request.url.params["query"]
 
 
 @pytest.mark.anyio
@@ -111,7 +124,7 @@ async def test_mouse_never_matches_mouse_ear_cress(client, respx_mock, load_fixt
 
     assert not result.is_error
     query = route.calls.last.request.url.params["query"]
-    assert "organism_id:10090" in query and "organism_name" not in query
+    assert "taxonomy_id:10090" in query and "organism_name" not in query
     organisms = [c["organism"] for c in result.structured_content["candidates"]]
     assert organisms == ["Mus musculus (Mouse)"]
     assert result.structured_content["organism"] == "mouse → Mus musculus (taxon 10090)"
@@ -171,7 +184,7 @@ async def test_unlisted_names_are_resolved_by_the_uniprot_taxonomy_search(
     await search(client, query="p53", organism="zebra finch")
 
     assert "zebra finch" in lookup.calls.last.request.url.params["query"]
-    assert "organism_id:59729" in route.calls.last.request.url.params["query"]
+    assert "taxonomy_id:59729" in route.calls.last.request.url.params["query"]
 
 
 @pytest.mark.anyio
@@ -228,7 +241,7 @@ async def test_several_exact_matches_prefer_the_ones_with_proteins(client, respx
 
     await search(client, query="p53", organism="blue gus")
 
-    assert "organism_id:222" in route.calls.last.request.url.params["query"]
+    assert "taxonomy_id:222" in route.calls.last.request.url.params["query"]
 
 
 @pytest.mark.anyio
@@ -261,7 +274,7 @@ async def test_unlisted_taxon_id_is_passed_through(client, respx_mock, load_fixt
 
     await search(client, query="p53", organism="9999999")
 
-    assert "organism_id:9999999" in route.calls.last.request.url.params["query"]
+    assert "taxonomy_id:9999999" in route.calls.last.request.url.params["query"]
 
 
 @pytest.mark.anyio
@@ -444,3 +457,59 @@ async def test_only_unreviewed_matches_also_point_at_the_selector(
     result = await search(client, query="CBP1", organism="human")
 
     assert "interactive question tool" in result.structured_content["note"]
+
+
+def strain_entry(load_fixture, accession, taxon_id, name, ancestors, reviewed=True):
+    item = copy.deepcopy(load_fixture("uniprot_search_cbp1_human_gene.json")["results"][0])
+    item["primaryAccession"] = accession
+    item["organism"] = {"scientificName": name, "taxonId": taxon_id}
+    item["lineages"] = [{"taxonId": t} for t in ancestors]
+    if not reviewed:
+        item["entryType"] = "UniProtKB unreviewed (TrEMBL)"
+    return item
+
+
+@pytest.mark.anyio
+async def test_a_hit_filed_under_a_strain_is_kept_and_named_in_the_receipt(
+    client, respx_mock, load_fixture
+):
+    """Regression: the table used to map yeast to a strain, and species not in it
+    (resolved at species rank) lost every entry filed under a strain."""
+    strain = strain_entry(
+        load_fixture, "P60010", 559292,
+        "Saccharomyces cerevisiae (strain ATCC 204508 / S288c)", [2759, 4930, 4932],
+    )
+    stranger = strain_entry(load_fixture, "Q00001", 3702, "Arabidopsis thaliana", [2759, 3193])
+    route = mock_search(respx_mock, {"results": [stranger, strain]})
+
+    result = await search(client, query="ACT1", organism="4932")
+
+    data = result.structured_content
+    assert [c["accession"] for c in data["candidates"]] == ["P60010"]  # descendants only
+    assert data["candidates"][0]["taxon_id"] == 559292
+    assert data["organism"] == (
+        "Saccharomyces cerevisiae (taxon 4932); P60010 filed under strain 559292"
+    )
+    assert "taxonomy_id:4932" in route.calls.last.request.url.params["query"]
+
+
+@pytest.mark.anyio
+async def test_reviewed_entries_are_requested_first_and_the_cap_still_applies(
+    client, respx_mock, load_fixture
+):
+    reviewed = [
+        strain_entry(load_fixture, f"P0000{i}", 83333, "Escherichia coli (strain K12)", [562])
+        for i in range(2)
+    ]
+    trembl = [
+        strain_entry(load_fixture, f"A0000{i}", 1000 + i, "Escherichia coli", [562], reviewed=False)
+        for i in range(5)
+    ]
+    route = mock_search(respx_mock, {"results": trembl + reviewed})
+
+    result = await search(client, query="recA", organism="e. coli", max_results=4)
+
+    queries = [c.request.url.params["query"] for c in route.calls]
+    assert "reviewed:true" in queries[0] and "reviewed:false" in queries[1]
+    accessions = [c["accession"] for c in result.structured_content["candidates"]]
+    assert accessions == ["P00000", "P00001", "A00000", "A00001"]  # reviewed first, cap 4

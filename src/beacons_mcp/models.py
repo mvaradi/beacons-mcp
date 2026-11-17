@@ -11,6 +11,10 @@ class ProteinCandidate(BaseModel):
         description="Gene names: the primary name first, then synonyms."
     )
     organism: str = Field(description="Organism, scientific name with common name.")
+    taxon_id: int | None = Field(
+        default=None,
+        description="NCBI taxon the entry is filed under (a strain, if it has one).",
+    )
     reviewed: bool = Field(
         description="True for curated Swiss-Prot entries, false for unreviewed TrEMBL."
     )
@@ -19,7 +23,7 @@ class ProteinCandidate(BaseModel):
 class ProteinSearchResult(BaseModel):
     query: str = Field(description="The name that was searched for.")
     organism: str = Field(
-        description="The organism searched, as resolved: 'mouse → Mus musculus (taxon 10090)'."
+        description="The organism searched, as resolved: 'mouse → Mus musculus (taxon 10090)'. Names any hit filed under a sub-taxon: '...; P60010 filed under strain 559292'."
     )
     candidates: list[ProteinCandidate] = Field(
         description="Ranked candidates, reviewed entries first."
